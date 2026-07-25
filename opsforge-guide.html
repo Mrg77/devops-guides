@@ -23,26 +23,26 @@
   </header>
 
   <div class="pitch">
-    <p><strong>En une phrase :</strong> opsforge, c'est <strong>trois outils dans un seul binaire</strong> — il <strong>installe</strong> ta boîte à outils DevOps, <strong>encadre</strong> la façon dont tu l'utilises (les fameux « guards »), et te donne une <strong>traçabilité de sécurité</strong> (supply-chain) de tout ce que tu as sur ta machine. C'est un outil <strong>personnel</strong>, pas une plateforme d'équipe : pas de serveur, pas de compte.</p>
+    <p><strong>En une phrase :</strong> opsforge, c'est une <strong>couche de sécurité policy-as-code pour ton poste DevOps</strong> — il <strong>encadre</strong> la façon dont tu (et tes agents IA) utilisez tes outils grâce aux fameux « guards », il <strong>trace</strong> l'hygiène et la supply-chain de sécurité de ta machine, et — accessoirement — il <strong>installe</strong> ta boîte à outils pour ne pas partir d'une machine vide. C'est un outil <strong>personnel</strong>, pas une plateforme d'équipe : pas de serveur, pas de compte. <em>Le différenciateur, ce sont les guards — pas l'installeur.</em></p>
   </div>
 
   <p class="intro">Avant d'entrer dans le détail, le cœur du produit tient en trois rôles complémentaires. Si tu ne dois retenir qu'une chose de ce guide, c'est ce triptyque.</p>
 
   <div class="trio">
-    <div class="t" style="--dot:var(--d-1)">
-      <div class="ic">📦</div>
-      <h4>Installer</h4>
-      <p>Monter et maintenir ta boîte à outils DevOps (kubectl, terraform, helm…) sans y passer une journée.</p>
-    </div>
     <div class="t" style="--dot:var(--d-2)">
       <div class="ic">🛡️</div>
-      <h4>Encadrer</h4>
-      <p>Un filet de sécurité dans ton shell : il t'arrête avant un <code class="inline">kubectl delete</code> sur la prod.</p>
+      <h4>Encadrer <span class="pill tag">le moat</span></h4>
+      <p>Un filet de sécurité dans ton shell : il t'arrête avant un <code class="inline">kubectl delete</code> sur la prod — <strong>toi au clavier comme tes agents IA</strong>. Le vrai différenciateur.</p>
     </div>
     <div class="t" style="--dot:var(--d-3)">
-      <div class="ic">🔍</div>
+      <div class="ic">🔐</div>
       <h4>Tracer</h4>
-      <p>Savoir ce qui tourne sur ta machine : quelles versions, quelles failles (CVE), lesquelles sont exploitées.</p>
+      <p>Savoir ce qui est un <strong>risque</strong> sur ta machine : credentials en clair ou qui n'expirent jamais (<code class="inline">verify</code>), failles (CVE) exploitées, SBOM signé.</p>
+    </div>
+    <div class="t" style="--dot:var(--d-1)">
+      <div class="ic">📦</div>
+      <h4>Installer <span class="pill">la commodité</span></h4>
+      <p>Monter et maintenir ta boîte à outils DevOps (kubectl, terraform, helm…) sans y passer une journée. Utile, mais ce n'est pas là qu'est la valeur.</p>
     </div>
   </div>
 
@@ -125,7 +125,7 @@
   <section class="domain" id="shell" style="--dot:var(--d-2)">
     <div class="domain-head">
       <h2>Le shell &amp; les guards</h2>
-      <span class="count">5 volets</span>
+      <span class="count">7 volets</span>
     </div>
     <p class="domain-sub">Le <strong>différenciateur</strong> du produit — ce que les autres installeurs (Homebrew, mise…) ne font pas. opsforge transforme ton shell (zsh, fish ou bash) en environnement qui te connaît, et t'empêche de faire des bêtises en prod.</p>
 
@@ -158,7 +158,31 @@
           <div class="row"><div class="k">La traçabilité</div><div class="v">Chaque commande qu'un agent passe au guard est journalisée avec la source <code class="inline">mcp</code>. Tu peux donc revoir après coup <strong>ce que tes agents IA ont proposé contre la prod</strong> : <code class="inline">opsforge guard log --source mcp --prod</code>.</div></div>
           <div class="row"><div class="k">Pourquoi ça compte</div><div class="v">Les agents IA autonomes qui touchent à l'infra sont <strong>le sujet chaud de 2026</strong>. opsforge en fait un <strong>filet de sécurité reviewable entre tes agents et la prod</strong> : l'agent vérifie son intention, et tu gardes la trace de chaque commande dangereuse qu'il a envisagée — pas seulement celles qu'il a menées à bout.</div></div>
         </div>
+        <div class="demo-block">
+          <div class="demo-title">La démo qui matérialise le différenciateur (30 s)</div>
+          <pre class="term"><span class="c">// L'agent IA appelle l'outil MCP au lieu de lancer la commande :</span>
+  → check_guard_policy(command=<span class="s">"kubectl delete namespace payments"</span>,
+                       context=<span class="s">"gke_prod-eu"</span>)
+  ← { <span class="k2">"action"</span>: <span class="warn2">"confirm"</span>,
+      <span class="k2">"message"</span>: <span class="s">"changes production-like Kubernetes resources"</span> }
+  <span class="c">// L'agent voit "confirm", s'arrête, te demande d'abord. Rien n'a été supprimé.</span>
+
+$ opsforge guard log <span class="s">--source mcp --prod</span>
+  2026-07-25 17:01  <span class="warn2">confirm</span>  kubectl delete namespace payments
+           context: gke_prod-eu  ·  via AI agent (MCP)</pre>
+          <p class="demo-cap">La <strong>même politique</strong>, le <strong>même journal</strong>, que la commande vienne de tes doigts ou de ton agent. Bien plus parlant que le sélecteur d'installation.</p>
+        </div>
         <div class="note"><b>À dire en entretien :</b> « Mon différenciateur, les guards policy-as-code, je l'ai étendu à l'ère des agents IA : le même moteur qui me protège au clavier protège aussi mes agents — et je garde les <i>receipts</i> de ce qu'ils ont tenté sur prod. »</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">Les guards à l'échelle d'une équipe</span>
+        <div class="rows">
+          <div class="row"><div class="k">La question</div><div class="v">« C'est un outil <em>perso</em> — et pour une flotte de 200 postes ? » La bonne réponse tient en une phrase : <strong>les deux pièces à standardiser sont déjà des fichiers.</strong></div></div>
+          <div class="row"><div class="k">Une politique</div><div class="v"><code class="inline">guards.yaml</code> est versionnable : committé dans un dépôt partagé (ou tes dotfiles / une golden image), relu en PR, testé en CI avec <code class="inline">guard lint</code> / <code class="inline">guard test --json</code>. Tout le monde exécute les mêmes règles.</div></div>
+          <div class="row"><div class="k">Un journal</div><div class="v">Le journal d'audit est du JSON ligne-par-ligne à un chemin connu. Un tail <strong>Promtail/Vector/Fluent Bit</strong> l'expédie vers <strong>Loki ou ton SIEM</strong> → « qu'a lancé qui (ou quel agent IA) contre un guard prod cette semaine » devient une requête à l'échelle de la flotte.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « Le chemin de <i>mon poste</i> vers <i>celui de l'équipe</i> est une histoire de config et de logs, pas une plateforme à opérer. J'adopte les morceaux utiles sans qu'opsforge devienne une dépendance au milieu. » — Ça transforme « power tool perso » en brique d'une stratégie d'équipe.</div>
       </div>
 
       <div class="card" style="--dot:var(--d-2)">
