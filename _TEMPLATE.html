@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!-- ============================================================================
+     TEMPLATE de page de guide projet.
+     ----------------------------------------------------------------------------
+     Pour créer la page d'un nouveau projet :
+       1. Copie ce fichier :  cp _TEMPLATE.html mon-projet-guide.html
+       2. Remplace tous les {{PLACEHOLDERS}} par ton contenu.
+       3. (optionnel) Change la couleur d'accent dans le <style> du <head>.
+       4. Duplique les blocs <section class="domain"> et <div class="card"> autant
+          que nécessaire. Chaque domaine porte une couleur via style="--dot:var(--d-N)".
+     Le design vit dans devops-guide.css (partagé) — ne le modifie pas par projet,
+     surcharge juste --accent si besoin.
+     ========================================================================== -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{PROJET}} — guide des fonctionnalités</title>
+<link rel="stylesheet" href="devops-guide.css">
+<!-- Couleur d'accent propre au projet (optionnel). Retire ce bloc pour le rouge-feu par défaut. -->
+<style>
+  :root { --accent: #d1495b; --accent-2: #e07b39; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ EN-TÊTE ============ -->
+  <header>
+    <div class="brand"><b>❯ {{PROJET}}</b> — {{SOUS-TITRE, ex: guide interne des fonctionnalités}}</div>
+    <h1>{{TITRE PRINCIPAL — ce que le lecteur va comprendre}}</h1>
+    <p class="lede">{{PHRASE D'ACCROCHE — à qui s'adresse la page et ce qu'elle apporte.}}</p>
+    <div class="meta">{{N}} commandes · {{N}} domaines · lecture ~{{N}} min</div>
+  </header>
+
+  <!-- ============ PITCH EN UNE PHRASE ============ -->
+  <div class="pitch">
+    <p><strong>En une phrase :</strong> {{le projet expliqué en une phrase, avec les mots-clés en <strong>gras</strong>.}}</p>
+  </div>
+
+  <!-- ============ (optionnel) LES 3 PILIERS ============ -->
+  <p class="intro">{{une phrase qui introduit le triptyque ci-dessous.}}</p>
+  <div class="trio">
+    <div class="t" style="--dot:var(--d-1)">
+      <div class="ic">{{emoji}}</div>
+      <h4>{{Pilier 1}}</h4>
+      <p>{{une ligne.}}</p>
+    </div>
+    <div class="t" style="--dot:var(--d-2)">
+      <div class="ic">{{emoji}}</div>
+      <h4>{{Pilier 2}}</h4>
+      <p>{{une ligne.}}</p>
+    </div>
+    <div class="t" style="--dot:var(--d-3)">
+      <div class="ic">{{emoji}}</div>
+      <h4>{{Pilier 3}}</h4>
+      <p>{{une ligne.}}</p>
+    </div>
+  </div>
+
+  <!-- ============ NAVIGATION PAR DOMAINE ============ -->
+  <!-- un lien par section, avec sa couleur (--d-1 à --d-5) -->
+  <nav class="toc">
+    <a href="#domaine-1" style="--dot:var(--d-1)">{{Domaine 1}}</a>
+    <a href="#domaine-2" style="--dot:var(--d-2)">{{Domaine 2}}</a>
+    <a href="#domaine-3" style="--dot:var(--d-3)">{{Domaine 3}}</a>
+  </nav>
+
+  <!-- ============ UN DOMAINE (dupliquer autant que besoin) ============ -->
+  <section class="domain" id="domaine-1" style="--dot:var(--d-1)">
+    <div class="domain-head">
+      <h2>{{Nom du domaine}}</h2>
+      <span class="count">{{N}} commandes</span>
+    </div>
+    <p class="domain-sub">{{une ou deux phrases : à quoi sert ce groupe de commandes.}}</p>
+
+    <div class="cards">
+
+      <!-- ---- UNE CARTE (dupliquer par fonctionnalité) ---- -->
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">{{la commande, ex: monoutil faire-truc}}</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">{{en une ou deux phrases claires.}}</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">{{le moment concret où on s'en sert.}}</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">{{la valeur : ce que ça évite ou apporte.}}</div></div>
+        </div>
+        <!-- encadré optionnel : astuce, note, "à dire en entretien"… -->
+        <div class="note"><b>À retenir :</b> {{note optionnelle.}}</div>
+      </div>
+
+      <!-- pastilles disponibles dans une commande, si utile :
+           <span class="pill accent">nouveau</span> <span class="pill tag">avancé</span>
+           <span class="pill crit">destructif</span> <span class="pill good">sûr</span> -->
+
+    </div>
+  </section>
+
+  <!-- ============ PIED DE PAGE ============ -->
+  <footer>
+    {{Ligne de bas de page — ex: guide interne du projet.}}<br>
+    Le détail vit dans le <a class="plain" href="{{URL du dépôt}}">README du dépôt</a>.
+  </footer>
+
+</div>
+</body>
+</html>

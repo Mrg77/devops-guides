@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevOps — guides de projets</title>
+<link rel="stylesheet" href="devops-guide.css">
+<style>
+  :root { --accent: #d1495b; --accent-2: #e07b39; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 8px; }
+  .proj {
+    display: block; text-decoration: none; color: inherit;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 22px; border-top: 3px solid var(--dot);
+    transition: border-color .15s, transform .15s;
+  }
+  .proj:hover { border-color: var(--dot); transform: translateY(-2px); }
+  .proj .name { font-family: var(--mono); font-weight: 700; font-size: 18px; }
+  .proj .desc { color: var(--ink-soft); font-size: 14.5px; margin-top: 8px; }
+  .proj .go { color: var(--dot); font-family: var(--mono); font-size: 13px; margin-top: 14px; display: inline-block; }
+  .soon { opacity: .55; }
+  .soon:hover { transform: none; border-color: var(--line); cursor: default; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand"><b>❯ devops guides</b> — comprendre chaque projet</div>
+    <h1>Guides de mes projets DevOps</h1>
+    <p class="lede">Une fiche par projet : ce que fait chaque fonctionnalité, quand s'en servir et pourquoi ça compte. Pensé pour comprendre vite et en parler avec assurance.</p>
+    <div class="meta">identité visuelle partagée · clair / sombre auto</div>
+  </header>
+
+  <div class="grid" style="margin-top:32px;">
+
+    <a class="proj" href="opsforge-guide.html" style="--dot:var(--accent)">
+      <div class="name">opsforge 🔥</div>
+      <div class="desc">Un CLI qui installe ta boîte à outils DevOps, encadre la façon dont tu l'utilises (guards), et trace la sécurité de ta machine (SBOM, VEX, CVE).</div>
+      <div class="go">lire le guide →</div>
+    </a>
+
+    <div class="proj soon" style="--dot:var(--ink-faint)">
+      <div class="name">projet suivant</div>
+      <div class="desc">Le prochain guide arrivera ici — même mise en page, un fichier à dupliquer.</div>
+      <div class="go" style="color:var(--ink-faint)">bientôt</div>
+    </div>
+
+  </div>
+
+  <footer>
+    Guides internes · identité visuelle partagée (devops-guide.css).<br>
+    Publié avec <a class="plain" href="https://pages.github.com/">GitHub Pages</a>.
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<!-- Page de guide générée avec le template DevOps (voir _TEMPLATE.html).
+     Design partagé : devops-guide.css. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>opsforge — guide des fonctionnalités</title>
+<link rel="stylesheet" href="devops-guide.css">
+<style>
+  /* accent propre à opsforge : le rouge-feu par défaut convient */
+  :root { --accent: #d1495b; --accent-2: #e07b39; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand"><b>❯ opsforge</b> — guide interne des fonctionnalités</div>
+    <h1>À quoi sert chaque partie de l'outil, et quand s'en servir</h1>
+    <p class="lede">Une fiche de référence pour toi : chaque commande expliquée simplement — ce qu'elle fait, le moment où tu la sors, et pourquoi ça compte. Écrit pour que tu puisses en parler avec assurance.</p>
+    <div class="meta">23 commandes · 5 domaines · lecture ~12 min</div>
+  </header>
+
+  <div class="pitch">
+    <p><strong>En une phrase :</strong> opsforge, c'est <strong>trois outils dans un seul binaire</strong> — il <strong>installe</strong> ta boîte à outils DevOps, <strong>encadre</strong> la façon dont tu l'utilises (les fameux « guards »), et te donne une <strong>traçabilité de sécurité</strong> (supply-chain) de tout ce que tu as sur ta machine. C'est un outil <strong>personnel</strong>, pas une plateforme d'équipe : pas de serveur, pas de compte.</p>
+  </div>
+
+  <p class="intro">Avant d'entrer dans le détail, le cœur du produit tient en trois rôles complémentaires. Si tu ne dois retenir qu'une chose de ce guide, c'est ce triptyque.</p>
+
+  <div class="trio">
+    <div class="t" style="--dot:var(--d-1)">
+      <div class="ic">📦</div>
+      <h4>Installer</h4>
+      <p>Monter et maintenir ta boîte à outils DevOps (kubectl, terraform, helm…) sans y passer une journée.</p>
+    </div>
+    <div class="t" style="--dot:var(--d-2)">
+      <div class="ic">🛡️</div>
+      <h4>Encadrer</h4>
+      <p>Un filet de sécurité dans ton shell : il t'arrête avant un <code class="inline">kubectl delete</code> sur la prod.</p>
+    </div>
+    <div class="t" style="--dot:var(--d-3)">
+      <div class="ic">🔍</div>
+      <h4>Tracer</h4>
+      <p>Savoir ce qui tourne sur ta machine : quelles versions, quelles failles (CVE), lesquelles sont exploitées.</p>
+    </div>
+  </div>
+
+  <nav class="toc">
+    <a href="#install" style="--dot:var(--d-1)">Installer &amp; gérer</a>
+    <a href="#shell"   style="--dot:var(--d-2)">Shell &amp; guards</a>
+    <a href="#supply"  style="--dot:var(--d-3)">Sécurité &amp; supply-chain</a>
+    <a href="#project" style="--dot:var(--d-4)">Projet &amp; poste-as-code</a>
+    <a href="#ops"     style="--dot:var(--d-5)">Piloter opsforge</a>
+  </nav>
+
+  <!-- ================= INSTALLER ================= -->
+  <section class="domain" id="install" style="--dot:var(--d-1)">
+    <div class="domain-head">
+      <h2>Installer &amp; gérer les outils</h2>
+      <span class="count">6 commandes</span>
+    </div>
+    <p class="domain-sub">Le point de départ : choisir, installer, mettre à jour et retrouver les CLI DevOps. C'est la partie « je monte mon poste de travail ».</p>
+
+    <div class="cards">
+
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">opsforge</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Lancé seul, ouvre le <strong>sélecteur interactif</strong> (une interface dans le terminal) pour parcourir le catalogue de 287 outils et cocher ceux à installer. Trois onglets : Outils · Mises à jour · Sécurité.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Quand tu montes une nouvelle machine ou que tu veux explorer ce qui existe sans connaître les noms par cœur.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Plus rapide et moins d'erreurs qu'installer 20 outils un par un à la main.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">opsforge install &lt;outils&gt;</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Installe des outils <strong>par leur nom</strong> (<code class="inline">opsforge install kubectl helm</code>) ou <strong>tout un profil</strong> d'un coup (<code class="inline">--profile aws-k8s</code>).</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Tu sais déjà ce que tu veux, ou tu scriptes l'installation (dans un Dockerfile, un script de setup…).</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Reproductible et non-interactif : la même commande installe la même chose partout. Marche via Homebrew ou en téléchargeant les binaires GitHub (donc même sur un Linux nu sans gestionnaire de paquets).</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">opsforge upgrade [-u]</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Met à jour les outils installés : tous, ou seulement ceux qui ont une version plus récente (<code class="inline">-u</code>), ou ceux que tu nommes.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Entretien régulier, ou après avoir vu qu'un outil est en retard dans <code class="inline">status</code>.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Rester à jour = moins de failles connues (CVE) et de bugs.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">opsforge list [all] [&lt;terme&gt;]</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Liste ce que tu as installé, ou tout le catalogue, ou <strong>cherche</strong> un outil (<code class="inline">opsforge list dns</code> trouve les outils réseau/DNS).</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">« Il existe quoi pour faire X ? » ou « qu'est-ce que j'ai déjà ? ».</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Le catalogue couvre tous les métiers (cloud, k8s, réseau, sécu, bases de données, IA…) — un seul endroit pour chercher.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">opsforge profiles</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Affiche les <strong>profils de stack</strong> tout prêts (core, k8s, aws-k8s, iac, observability, security…) et lesquels sont installés.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Avant un <code class="inline">install --profile</code>, pour voir ce que chaque profil contient.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">« Je bosse sur du Kubernetes AWS » → un profil installe toute la stack (aws, eksctl, kubectl, helm, k9s…) en une commande.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">opsforge use &lt;outil&gt;@&lt;version&gt;</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Épingle une <strong>version précise</strong> d'un outil dans le dossier courant (ex. <code class="inline">terraform@1.5</code>).</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Un projet exige une version spécifique de terraform/node/etc.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">opsforge <strong>ne réinvente rien</strong> : il délègue à <code class="inline">mise</code> ou <code class="inline">asdf</code>, les outils standards de gestion de versions. C'est un bon exemple à citer : « je m'appuie sur ce qui existe plutôt que réécrire ».</div></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SHELL & GUARDS ================= -->
+  <section class="domain" id="shell" style="--dot:var(--d-2)">
+    <div class="domain-head">
+      <h2>Le shell &amp; les guards</h2>
+      <span class="count">4 commandes</span>
+    </div>
+    <p class="domain-sub">Le <strong>différenciateur</strong> du produit — ce que les autres installeurs (Homebrew, mise…) ne font pas. opsforge transforme ton shell (zsh, fish ou bash) en environnement qui te connaît, et t'empêche de faire des bêtises en prod.</p>
+
+    <div class="cards">
+
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">opsforge shell install</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Active la couche shell : un <strong>prompt qui devient rouge en prod</strong>, la complétion, l'aide inline <code class="inline">?</code>, des alias DevOps, et les <strong>guards</strong>.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Une fois, au setup. Puis <code class="inline">exec zsh</code> (ou fish/bash) pour activer.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Il ne remplace pas ton shell, il l'améliore. Marche sur les 3 shells (le blocage des guards est garanti sur zsh/fish, best-effort sur bash — un détail que tu peux expliquer honnêtement).</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">opsforge guard [list | test | lint | init]</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Le cœur du sujet : une <strong>politique déclarative</strong> (des règles dans un fichier YAML) qui décide si une commande destructrice doit être autorisée, avertir, demander confirmation, ou être bloquée — <strong>selon le contexte où tu es</strong>.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">En continu, sans y penser : quand tu tapes <code class="inline">kubectl delete</code> ou <code class="inline">terraform destroy</code> sur un cluster de prod, il t'intercepte. <code class="inline">guard test</code> permet de simuler une règle sans risque.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">C'est un <strong>filet de sécurité contre le geste étourdi</strong> (tu as changé de contexte sans t'en rendre compte). Il lit le contexte <strong>passivement</strong> (le fichier kubeconfig), sans jamais lancer kubectl — donc il ne peut pas déclencher un login.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « Les règles sont du code (policy-as-code), versionnables et testables en CI. Et je suis clair sur les limites : c'est un filet de sécurité, <b>pas</b> une barrière de sécurité — la vraie protection prod reste les comptes séparés et les approbations CI. » Cette honnêteté est un signal de maturité.</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">opsforge history [famille]</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Ton historique de commandes, <strong>filtré par famille d'outils</strong> (kube, git, tf, docker…).</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">« C'était quoi ma commande <code class="inline">kubectl port-forward</code> de la semaine dernière ? »</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Retrouver une commande précise sans faire défiler tout ton historique. Lu passivement (il ne ré-exécute jamais rien).</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">opsforge explain [--last]</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Demande à ton CLI d'IA (si tu en as un) d'<strong>expliquer une commande</strong> ou ta <strong>dernière erreur</strong>.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Une commande vient d'échouer et tu ne comprends pas pourquoi (raccourci <code class="inline">??</code> dans le shell).</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Gagner du temps sans quitter le terminal pour aller chercher sur le web.</div></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SUPPLY-CHAIN ================= -->
+  <section class="domain" id="supply" style="--dot:var(--d-3)">
+    <div class="domain-head">
+      <h2>Sécurité &amp; supply-chain</h2>
+      <span class="count">6 commandes</span>
+    </div>
+    <p class="domain-sub">Le sujet chaud de 2026. « Supply-chain » = la chaîne d'approvisionnement logicielle : <strong>d'où viennent tes outils, quelles failles ils portent, et comment le prouver</strong>. C'est ici que se trouvent les fonctionnalités que tu voulais comprendre.</p>
+
+    <div class="cards">
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">opsforge audit [--secrets]</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Scanne tes outils installés et repère les <strong>failles connues (CVE)</strong> en croisant les versions avec la base OSV.dev. Avec <code class="inline">--secrets</code>, cherche aussi des <strong>identifiants qui fuitent</strong> dans ton historique/fichiers.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Régulièrement, et surtout en CI (il renvoie un code d'erreur si une faille grave est trouvée → fait échouer le pipeline).</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">« Est-ce que mon terraform/argocd a une faille de sécurité connue ? » — sans devoir vérifier à la main outil par outil.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">opsforge sbom [--audit]</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Produit un <strong>SBOM</strong> = <em>Software Bill of Materials</em>, littéralement la <strong>« liste des ingrédients »</strong> de ton poste : chaque outil, sa version, son identité. Au format standard <strong>CycloneDX</strong>. Avec <code class="inline">--audit</code>, il y ajoute les CVE.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Quand une équipe sécurité/conformité te demande « prouve-moi ce qu'il y a sur cette machine ». Tu leur donnes le SBOM.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">C'est un <strong>document machine standard</strong> : d'autres outils (grype, trivy) ou un pipeline de conformité savent le lire. C'est devenu une exigence dans beaucoup de contextes réglementés.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">opsforge vex --kev <span class="pill accent">à comprendre</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">Le problème</div><div class="v">Un simple scan de CVE te sort <strong>des dizaines de failles</strong>. Impossible de toutes corriger d'un coup. <strong>Laquelle traiter en premier ?</strong> Et en 2026, le score de gravité classique (CVSS) est souvent absent ou peu fiable.</div></div>
+          <div class="row"><div class="k">VEX =</div><div class="v"><em>Vulnerability Exploitability eXchange</em>. Là où une liste de CVE dit « ces failles existent », le VEX dit, faille par faille, un <strong>statut lisible par machine</strong> (affecté / corrigé / …) <strong>plus une action</strong> (« passe à telle version »). C'est l'artefact de <strong>triage</strong>.</div></div>
+          <div class="row"><div class="k">--kev =</div><div class="v">Croise avec le catalogue <strong>CISA KEV</strong> (<em>Known Exploited Vulnerabilities</em> — les failles <strong>activement exploitées dans la nature</strong>, tenu par l'agence de cybersécurité US). Résultat : opsforge <strong>met en avant les 2-3 failles réellement dangereuses</strong> à corriger tout de suite.</div></div>
+          <div class="row"><div class="k">En clair</div><div class="v"><strong>Prioriser par « est-ce vraiment exploité ? » plutôt que par un score théorique.</strong> Tu ne corriges pas 43 failles en panique, tu corriges d'abord celles que des attaquants utilisent vraiment.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « Le NVD a arrêté d'enrichir la plupart des CVE en 2026, donc trier par score CVSS ne marche plus. Je trie par <b>exploitabilité réelle</b> (le catalogue KEV de la CISA) — c'est la façon pertinente de prioriser aujourd'hui. »</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">opsforge sbom --sign / vex --sign <span class="pill accent">à comprendre</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">Le problème</div><div class="v">Tu produis un SBOM ou un VEX. Comment le destinataire sait qu'il n'a <strong>pas été modifié</strong> en route, et qu'il vient bien <strong>de toi</strong> ?</div></div>
+          <div class="row"><div class="k">Signer =</div><div class="v">opsforge appose une <strong>signature cryptographique</strong> sur le document, dans un <strong>bundle Sigstore</strong> (Sigstore = le standard moderne de signature, celui qu'utilise l'écosystème cloud-native). N'importe qui peut ensuite <strong>vérifier</strong> avec <code class="inline">cosign verify-blob</code>.</div></div>
+          <div class="row"><div class="k">« key-based &amp; offline »</div><div class="v">La signature se fait avec une <strong>clé locale</strong> (générée sur ta machine), <strong>sans réseau</strong>, sans login. À l'inverse d'une signature « keyless » qui publierait ton identité (ton email) dans un journal public mondial et permanent.</div></div>
+          <div class="row"><div class="k">« integrity, not provenance »</div><div class="v">Le point <strong>honnête et important</strong> : une signature locale prouve l'<strong>intégrité</strong> (le fichier n'a pas été altéré) et l'<strong>attribution à ta clé</strong>. Elle ne prouve <strong>pas</strong> qu'il a été « produit par un pipeline de confiance » (ça, c'est la <em>provenance</em>, une propriété de CI). opsforge garde la vraie provenance pour ses <strong>releases</strong> (signées en CI).</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « J'ai choisi la signature par clé locale pour un artefact généré à la main, parce que le keyless publierait l'email du signataire dans un log public et immuable, et ne prouverait rien sur la supply-chain. Le bon outil pour chaque tâche : intégrité locale ici, provenance keyless pour les binaires que je livre. » — Ce genre de nuance montre que tu comprends le <b>modèle de menace</b>, pas juste l'API.</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">opsforge scan &lt;image&gt; [--diff] <span class="pill tag">différenciateur</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Scanne une <strong>image de conteneur Docker</strong> pour ses failles. opsforge ne réinvente pas l'extraction (il délègue à syft/trivy) mais fait passer le résultat par <strong>son propre moteur d'analyse OSV</strong>.</div></div>
+          <div class="row"><div class="k">--diff =</div><div class="v">L'angle unique : il <strong>corrèle l'image avec ta machine</strong>. « Un outil que je fais tourner en local est-il embarqué dans une <strong>version différente</strong> dans cette image ? » — c'est la dérive poste ↔ CI que les scanners classiques (trivy) ne montrent pas.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Détecter le classique « ça marche sur ma machine » causé par une différence de version entre ton poste et l'image de build/CI.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « Je ne réimplémente pas grype/trivy — je m'en sers pour l'extraction et j'apporte la valeur que personne ne fait : la <b>corrélation poste ↔ image</b>. »</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">opsforge notify</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Un <strong>digest unique</strong> de tout ce qui réclame ton attention : CVE, mises à jour disponibles, secrets qui fuitent, un opsforge plus récent.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Automatique : une ligne s'affiche <strong>une fois par session</strong> dans ton shell quand quelque chose ne va pas. Ou à la demande.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Tu n'as pas à lancer les scans toi-même — l'info vient à toi, sans jamais bloquer ton terminal (lecture d'un cache local, jamais le réseau en direct).</div></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= PROJET & POSTE-AS-CODE ================= -->
+  <section class="domain" id="project" style="--dot:var(--d-4)">
+    <div class="domain-head">
+      <h2>Projet &amp; poste-de-travail-as-code</h2>
+      <span class="count">4 commandes</span>
+    </div>
+    <p class="domain-sub">« As-code » = décrire dans un fichier (versionnable) ce qui était avant configuré à la main. Ici : reproduire un poste de travail ou la boîte à outils d'un projet, à l'identique, partout.</p>
+
+    <div class="cards">
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">opsforge snapshot</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Exporte <strong>tout ton poste</strong> — outils, profils, config shell, thème, politique de guards — dans un <strong>seul fichier YAML</strong> partageable.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Avant de changer de laptop, ou pour partager ta config d'équipe.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Ton poste devient reproductible au lieu d'être un montage artisanal impossible à refaire.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">opsforge apply [--check] &lt;fichier&gt;</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v"><strong>Reconstruit</strong> un poste à partir d'un snapshot. Avec <code class="inline">--check</code>, il <strong>vérifie sans rien changer</strong> et signale les écarts.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Sur la nouvelle machine (reconstruire), ou en CI (vérifier qu'une image correspond toujours à ta référence).</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">« Rebâtir mon poste en 2 min » et « garantir qu'il ne dérive pas » avec la même donnée.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">opsforge sync [--check]</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Lit un <code class="inline">opsforge.yaml</code> committé <strong>à la racine d'un projet</strong> et installe la boîte à outils que ce dépôt exige. Écrit aussi un <strong><code class="inline">opsforge.lock</code></strong> qui fige les versions exactes.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Un nouveau arrive sur un projet : <code class="inline">opsforge sync</code> et il a exactement les bons outils. En CI, <code class="inline">--check</code> échoue si une version dérive.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Comme <code class="inline">mise</code>/<code class="inline">devbox</code>, mais avec en plus un <strong>gate CVE</strong> : le fichier peut refuser de synchroniser si un outil requis porte une faille grave. <code class="inline">opsforge.yaml</code> dit le <em>quoi</em>, <code class="inline">opsforge.lock</code> prouve la <em>version exacte</em>.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">opsforge mcp</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Lance un <strong>serveur MCP</strong> (<em>Model Context Protocol</em>, le standard 2026 pour connecter des outils à une IA) en <strong>lecture seule</strong>. Un agent IA (Claude, Cursor…) peut alors <strong>interroger ton poste</strong>.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Tu veux qu'un assistant IA sache quelles versions tu as, quelles CVE, si une commande déclencherait un guard — sans qu'il devine.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v"><strong>Lecture seule par conception</strong> : l'agent peut inspecter et raisonner, mais jamais rien installer ou modifier. C'est un choix de sécurité assumé (un bon point à expliquer).</div></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= PILOTER OPSFORGE ================= -->
+  <section class="domain" id="ops" style="--dot:var(--d-5)">
+    <div class="domain-head">
+      <h2>Piloter opsforge &amp; voir l'état</h2>
+      <span class="count">3 commandes</span>
+    </div>
+    <p class="domain-sub">Les commandes du quotidien pour voir l'état de ta machine et gérer l'outil lui-même.</p>
+
+    <div class="cards">
+
+      <div class="card" style="--dot:var(--d-5)">
+        <span class="cmd">opsforge status</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Le <strong>cockpit en un coup d'œil</strong> : combien d'outils installés, lesquels sont à mettre à jour, l'état du shell, le thème, un résumé sécurité.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Le matin, ou quand tu veux un état rapide sans tout scanner.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Une seule commande pour la vue d'ensemble.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-5)">
+        <span class="cmd">opsforge doctor</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Le <strong>bilan de santé complet</strong> : système, shell, boîte à outils, <strong>CVE et secrets qui fuitent</strong>. Plus détaillé que <code class="inline">status</code>.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Diagnostic approfondi : « quelque chose cloche, montre-moi tout ». Ou en CI pour un rapport de santé.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">C'est la <strong>clôture riche</strong> qu'on voit dans la démo : elle réunit tout (système + toolbox + sécurité) en un seul écran, avec des ✓ / ⚠ / ✗ et les commandes qui corrigent chaque point.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-5)">
+        <span class="cmd">opsforge self [version | update]</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Gère le binaire opsforge lui-même : voir sa version, ou se mettre à jour.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Pour passer à la dernière version d'opsforge.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">La mise à jour <strong>vérifie sa propre intégrité</strong> (checksum SHA-256) et sa <strong>signature cosign</strong> avant de se remplacer — la même exigence supply-chain qu'opsforge applique à tes outils, il se l'applique à lui-même.</div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="domain-sub" style="margin-top:22px;">➕ Il reste <code class="inline">theme</code> (choisir la palette de couleurs de l'interface) et <code class="inline">completion</code> (générer l'auto-complétion du shell) — utilitaires, pas essentiels à retenir.</p>
+  </section>
+
+  <footer>
+    Guide interne opsforge · généré pour comprendre chaque fonctionnalité et savoir en parler.<br>
+    Le détail technique vit dans le <a class="plain" href="https://github.com/Mrg77/opsforge">README du dépôt</a> (EN + FR).
+  </footer>
+
+</div>
+</body>
+</html>
