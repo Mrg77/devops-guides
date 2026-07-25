@@ -19,7 +19,7 @@
     <div class="brand"><b>❯ opsforge</b> — guide interne des fonctionnalités</div>
     <h1>À quoi sert chaque partie de l'outil, et quand s'en servir</h1>
     <p class="lede">Une fiche de référence pour toi : chaque commande expliquée simplement — ce qu'elle fait, le moment où tu la sors, et pourquoi ça compte. Écrit pour que tu puisses en parler avec assurance.</p>
-    <div class="meta">23 commandes · 5 domaines · lecture ~12 min</div>
+    <div class="meta">26 commandes · 5 domaines · lecture ~14 min</div>
   </header>
 
   <div class="pitch">
@@ -125,7 +125,7 @@
   <section class="domain" id="shell" style="--dot:var(--d-2)">
     <div class="domain-head">
       <h2>Le shell &amp; les guards</h2>
-      <span class="count">4 commandes</span>
+      <span class="count">5 volets</span>
     </div>
     <p class="domain-sub">Le <strong>différenciateur</strong> du produit — ce que les autres installeurs (Homebrew, mise…) ne font pas. opsforge transforme ton shell (zsh, fish ou bash) en environnement qui te connaît, et t'empêche de faire des bêtises en prod.</p>
 
@@ -141,13 +141,24 @@
       </div>
 
       <div class="card" style="--dot:var(--d-2)">
-        <span class="cmd">opsforge guard [list | test | lint | init]</span>
+        <span class="cmd">opsforge guard [list | test | lint | init | log]</span>
         <div class="rows">
           <div class="row"><div class="k">C'est quoi</div><div class="v">Le cœur du sujet : une <strong>politique déclarative</strong> (des règles dans un fichier YAML) qui décide si une commande destructrice doit être autorisée, avertir, demander confirmation, ou être bloquée — <strong>selon le contexte où tu es</strong>.</div></div>
           <div class="row"><div class="k">Quand</div><div class="v">En continu, sans y penser : quand tu tapes <code class="inline">kubectl delete</code> ou <code class="inline">terraform destroy</code> sur un cluster de prod, il t'intercepte. <code class="inline">guard test</code> permet de simuler une règle sans risque.</div></div>
           <div class="row"><div class="k">Pourquoi</div><div class="v">C'est un <strong>filet de sécurité contre le geste étourdi</strong> (tu as changé de contexte sans t'en rendre compte). Il lit le contexte <strong>passivement</strong> (le fichier kubeconfig), sans jamais lancer kubectl — donc il ne peut pas déclencher un login.</div></div>
+          <div class="row"><div class="k">Nouveau — <code class="inline">guard log</code></div><div class="v">Un <strong>journal d'audit</strong> : chaque fois qu'un guard se déclenche (warn/confirm/deny), c'est écrit dans une trace locale append-only. <code class="inline">guard log --prod --since 7d</code> répond à ce que ton historique shell ne peut pas dire : <strong>« qu'ai-je lancé de dangereux sur prod cette semaine, et le guard l'a-t-il laissé passer ? »</strong></div></div>
         </div>
         <div class="note"><b>À dire en entretien :</b> « Les règles sont du code (policy-as-code), versionnables et testables en CI. Et je suis clair sur les limites : c'est un filet de sécurité, <b>pas</b> une barrière de sécurité — la vraie protection prod reste les comptes séparés et les approbations CI. » Cette honnêteté est un signal de maturité.</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">Guards ✕ agents IA <span class="pill tag">différenciateur 2026</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">L'idée</div><div class="v">Un agent IA branché sur opsforge (via le serveur <code class="inline">mcp</code>) peut <strong>demander au guard si une commande est sûre dans le contexte actuel</strong> — <em>avant</em> de l'exécuter. Le guard répond (autoriser/avertir/confirmer/bloquer) mais <strong>n'exécute jamais</strong> la commande.</div></div>
+          <div class="row"><div class="k">La traçabilité</div><div class="v">Chaque commande qu'un agent passe au guard est journalisée avec la source <code class="inline">mcp</code>. Tu peux donc revoir après coup <strong>ce que tes agents IA ont proposé contre la prod</strong> : <code class="inline">opsforge guard log --source mcp --prod</code>.</div></div>
+          <div class="row"><div class="k">Pourquoi ça compte</div><div class="v">Les agents IA autonomes qui touchent à l'infra sont <strong>le sujet chaud de 2026</strong>. opsforge en fait un <strong>filet de sécurité reviewable entre tes agents et la prod</strong> : l'agent vérifie son intention, et tu gardes la trace de chaque commande dangereuse qu'il a envisagée — pas seulement celles qu'il a menées à bout.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « Mon différenciateur, les guards policy-as-code, je l'ai étendu à l'ère des agents IA : le même moteur qui me protège au clavier protège aussi mes agents — et je garde les <i>receipts</i> de ce qu'ils ont tenté sur prod. »</div>
       </div>
 
       <div class="card" style="--dot:var(--d-2)">
@@ -175,7 +186,7 @@
   <section class="domain" id="supply" style="--dot:var(--d-3)">
     <div class="domain-head">
       <h2>Sécurité &amp; supply-chain</h2>
-      <span class="count">6 commandes</span>
+      <span class="count">7 commandes</span>
     </div>
     <p class="domain-sub">Le sujet chaud de 2026. « Supply-chain » = la chaîne d'approvisionnement logicielle : <strong>d'où viennent tes outils, quelles failles ils portent, et comment le prouver</strong>. C'est ici que se trouvent les fonctionnalités que tu voulais comprendre.</p>
 
@@ -188,6 +199,16 @@
           <div class="row"><div class="k">Quand</div><div class="v">Régulièrement, et surtout en CI (il renvoie un code d'erreur si une faille grave est trouvée → fait échouer le pipeline).</div></div>
           <div class="row"><div class="k">Pourquoi</div><div class="v">« Est-ce que mon terraform/argocd a une faille de sécurité connue ? » — sans devoir vérifier à la main outil par outil.</div></div>
         </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">opsforge verify [--strict] <span class="pill tag">nouveau</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v"><code class="inline">audit</code> demande « mes <em>outils</em> sont-ils vulnérables ? ». <code class="inline">verify</code> répond à l'autre moitié : <strong>« les <em>credentials</em> sur ma machine sont-ils un risque ? »</strong>. Il fait l'inventaire de tous les secrets stockés localement (clés cloud, kubeconfig, clés SSH, tokens de registry…) et signale les problèmes d'hygiène.</div></div>
+          <div class="row"><div class="k">Ce qu'il détecte</div><div class="v"><strong>Clés statiques qui n'expirent jamais</strong> (clé AWS <code class="inline">AKIA</code>, clé JSON de service account GCP, clé SSH sans passphrase, token kube statique) — en distinguant une clé <em>statique</em> d'une clé <em>fédérée</em> (SSO/OIDC/exec). Plus : <strong>secrets en clair</strong> (docker/npm/netrc en base64 — car base64 n'est <em>pas</em> du chiffrement), <strong>permissions trop larges</strong> (un fichier de secret lisible par tous), <strong>certs/tokens expirés</strong>.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Un audit d'hygiène régulier de ton poste, et en CI (<code class="inline">--strict</code> fait échouer le job au moindre finding ; par défaut seulement sur les risques graves).</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « <code class="inline">verify</code> est <b>strictement en lecture seule et hors-ligne</b> : il n'exécute <b>jamais</b> d'outil externe — en particulier jamais <code class="inline">kubectl</code>, donc lire un kubeconfig OIDC ne peut pas déclencher de login. Il <b>n'affiche jamais la valeur d'un secret</b>, seulement <i>où</i> il est et <i>pourquoi</i> c'est risqué. Il lit l'expiration d'un cert dans son PEM, celle d'un token dans son claim JWT — tout en parsant les fichiers en Go pur. Et je reste honnête : c'est un filet, pas une garantie (les trousseaux de l'OS restent illisibles). » — Sur ma propre machine, il a trouvé une clé de service account GCP en clair et 3 clés SSH sans passphrase, sans rien exécuter.</div>
       </div>
 
       <div class="card" style="--dot:var(--d-3)">
@@ -286,6 +307,7 @@
           <div class="row"><div class="k">C'est quoi</div><div class="v">Lance un <strong>serveur MCP</strong> (<em>Model Context Protocol</em>, le standard 2026 pour connecter des outils à une IA) en <strong>lecture seule</strong>. Un agent IA (Claude, Cursor…) peut alors <strong>interroger ton poste</strong>.</div></div>
           <div class="row"><div class="k">Quand</div><div class="v">Tu veux qu'un assistant IA sache quelles versions tu as, quelles CVE, si une commande déclencherait un guard — sans qu'il devine.</div></div>
           <div class="row"><div class="k">Pourquoi</div><div class="v"><strong>Lecture seule par conception</strong> : l'agent peut inspecter et raisonner, mais jamais rien installer ou modifier. C'est un choix de sécurité assumé (un bon point à expliquer).</div></div>
+          <div class="row"><div class="k">Lien avec les guards</div><div class="v">L'un des outils MCP est <code class="inline">check_guard_policy</code> : l'agent peut faire <strong>valider une commande par le guard avant de l'exécuter</strong>, et chaque appel est tracé (<code class="inline">guard log --source mcp</code>). Voir le volet <a class="plain" href="#shell">Guards ✕ agents IA</a>.</div></div>
         </div>
       </div>
 
