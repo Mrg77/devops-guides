@@ -7,19 +7,28 @@
 <link rel="stylesheet" href="devops-guide.css">
 <style>
   :root { --accent: #d1495b; --accent-2: #e07b39; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 8px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 8px; }
   .proj {
-    display: block; text-decoration: none; color: inherit;
+    display: flex; flex-direction: column;
     background: var(--surface); border: 1px solid var(--line);
     border-radius: var(--radius); padding: 22px; border-top: 3px solid var(--dot);
-    transition: border-color .15s, transform .15s;
+    transition: border-color .15s;
   }
-  .proj:hover { border-color: var(--dot); transform: translateY(-2px); }
+  .proj:hover { border-color: var(--dot); }
   .proj .name { font-family: var(--mono); font-weight: 700; font-size: 18px; }
   .proj .desc { color: var(--ink-soft); font-size: 14.5px; margin-top: 8px; }
-  .proj .go { color: var(--dot); font-family: var(--mono); font-size: 13px; margin-top: 14px; display: inline-block; }
+  /* la rangée de liens en bas de carte */
+  .proj .links {
+    display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
+    margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 13px;
+  }
+  .proj .links a { color: var(--dot); text-decoration: none; }
+  .proj .links a:hover { text-decoration: underline; }
+  .proj .links a.muted { color: var(--ink-soft); }
+  .proj .links .sep { color: var(--ink-faint); }
   .soon { opacity: .55; }
-  .soon:hover { transform: none; border-color: var(--line); cursor: default; }
+  .soon .name, .soon .links a { color: var(--ink-faint) !important; }
 </style>
 </head>
 <body>
@@ -34,17 +43,22 @@
 
   <div class="grid" style="margin-top:32px;">
 
-    <a class="proj" href="opsforge-guide.html" style="--dot:var(--accent)">
+    <article class="proj" style="--dot:var(--accent)">
       <div class="name">opsforge 🔥</div>
       <div class="desc">Un CLI qui installe ta boîte à outils DevOps, encadre la façon dont tu l'utilises (guards), et trace la sécurité de ta machine (SBOM, VEX, CVE).</div>
-      <div class="go">lire le guide →</div>
-    </a>
+      <div class="links">
+        <a href="opsforge-guide.html"><strong>Lire le guide →</strong></a>
+        <span class="sep">·</span>
+        <a class="muted" href="https://github.com/Mrg77/opsforge" target="_blank" rel="noopener">Repo</a>
+        <a class="muted" href="https://github.com/Mrg77/opsforge#readme" target="_blank" rel="noopener">README</a>
+      </div>
+    </article>
 
-    <div class="proj soon" style="--dot:var(--ink-faint)">
+    <article class="proj soon" style="--dot:var(--ink-faint)">
       <div class="name">projet suivant</div>
       <div class="desc">Le prochain guide arrivera ici — même mise en page, un fichier à dupliquer.</div>
-      <div class="go" style="color:var(--ink-faint)">bientôt</div>
-    </div>
+      <div class="links"><span>bientôt</span></div>
+    </article>
 
   </div>
 
