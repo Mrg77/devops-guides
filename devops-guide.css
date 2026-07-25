@@ -183,6 +183,24 @@ section.domain:first-of-type { border-top: none; }
 .pill.warn   { color: var(--warn);  background: color-mix(in srgb, var(--warn) 18%, transparent); }
 .pill.crit   { color: var(--crit);  background: color-mix(in srgb, var(--crit) 16%, transparent); }
 
+/* ---- bloc démo terminal ---- */
+.demo-block { margin: 18px 0 6px; }
+.demo-title {
+  font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: .03em;
+  text-transform: uppercase; color: var(--d-2); margin-bottom: 8px;
+}
+.term {
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.55;
+  background: var(--code-bg); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 8px; padding: 14px 16px; overflow-x: auto; white-space: pre;
+  tab-size: 2;
+}
+.term .c     { color: var(--ink-faint); font-style: italic; }   /* commentaire */
+.term .s     { color: var(--d-1); }                             /* chaîne / flag */
+.term .k2    { color: var(--d-4); }                             /* clé JSON */
+.term .warn2 { color: var(--warn); font-weight: 700; }          /* action confirm */
+.demo-cap { margin: 10px 2px 0; font-size: 13.5px; color: var(--ink-soft); }
+
 /* ---- utilitaires ---- */
 footer {
   margin-top: 48px; padding: 28px 0 60px; border-top: 1px solid var(--line);
