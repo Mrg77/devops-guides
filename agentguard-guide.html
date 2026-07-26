@@ -139,10 +139,11 @@ $ agentguard policy test --target <span class="s">"kubectl get pods"</span> --co
       <div class="card" style="--dot:var(--d-4)">
         <span class="cmd">agentguard log</span>
         <div class="rows">
-          <div class="row"><div class="k">C'est quoi</div><div class="v">Rejoue le <strong>journal d'audit</strong> : chaque action qu'un agent a proposée via le proxy, avec la décision, le contexte, et un compteur de tokens. Filtres <code class="inline">--prod</code> / <code class="inline">--decision deny</code> / <code class="inline">--since 7d</code>.</div></div>
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Rejoue le <strong>journal d'audit</strong> : chaque action qu'un agent a proposée, avec la décision, le contexte, et une estimation de taille en tokens. Filtres <code class="inline">--prod</code> / <code class="inline">--decision deny</code> / <code class="inline">--since 7d</code>.</div></div>
           <div class="row"><div class="k">Quand</div><div class="v">Après coup : « qu'a tenté mon agent contre la prod cette semaine, et le guard l'a-t-il laissé passer ? »</div></div>
           <div class="row"><div class="k">Pourquoi</div><div class="v">Les <em>receipts</em>. Un journal append-only, local, qui répond à une question que le transcript brut du modèle ne peut pas répondre. Exportable vers Loki/SIEM pour une équipe.</div></div>
         </div>
+        <div class="note"><b>À dire en entretien :</b> le guard est <b>déterministe</b> — il ne fait <b>aucun appel LLM</b>, donc il ne consomme <b>aucun token en propre</b> (l'inverse d'un garde-fou « LLM-as-a-judge » qui facturerait un appel modèle par décision). Le <code class="inline">~N tok</code> affiché est une <b>estimation de la taille de l'action</b> pour le FinOps, pas une facture.</div>
       </div>
 
     </div>
