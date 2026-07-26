@@ -185,6 +185,8 @@ section.domain:first-of-type { border-top: none; }
 
 /* ---- bloc démo terminal ---- */
 .demo-block { margin: 18px 0 6px; }
+/* encart qui compare deux modes (réutilise le style terminal) */
+.modes-note { margin: 6px 0 22px; }
 .demo-title {
   font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: .03em;
   text-transform: uppercase; color: var(--d-2); margin-bottom: 8px;
