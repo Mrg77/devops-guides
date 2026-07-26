@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!-- Guide agentguard — généré depuis _TEMPLATE.html. Design partagé : devops-guide.css. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>agentguard — guide des fonctionnalités</title>
+<link rel="stylesheet" href="devops-guide.css">
+<style>
+  /* accent propre à agentguard : le violet "garde/agent", pour le distinguer d'opsforge (rouge-feu) */
+  :root { --accent: #7048b6; --accent-2: #2a6b8f; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand"><b>❯ agentguard</b> — guide interne des fonctionnalités</div>
+    <h1>Un pare-feu déterministe entre un agent IA et ce qu'il a le droit de faire</h1>
+    <p class="lede">Une fiche de référence pour toi : chaque commande expliquée simplement — ce qu'elle fait, quand tu la sors, et pourquoi ça compte. Écrit pour que tu puisses en parler avec assurance en entretien.</p>
+    <div class="meta">4 commandes · 3 domaines · lecture ~10 min · le frère d'<a class="plain" href="opsforge-guide.html">opsforge</a></div>
+  </header>
+
+  <div class="pitch">
+    <p><strong>En une phrase :</strong> agentguard, c'est un <strong>pare-feu policy-as-code déterministe pour les tool-calls d'un agent IA</strong> — au lieu de <em>demander</em> au modèle « ne supprime jamais la prod » (ce qui échoue), il <strong>intercepte l'action</strong> (quel outil, quelle cible, quel contexte) et applique une règle versionnée, comme un firewall applique une ACL. <strong>Local-first et Kubernetes-native.</strong> C'est un outil de <strong>confinement</strong> qui réduit le rayon de souffle d'un agent qui déraille — <em>un filet de sécurité, pas une garantie</em>.</p>
+  </div>
+
+  <p class="intro">Le problème que ça résout est concret et daté de 2025-26 : les agents IA autonomes touchent à l'infra, et le contrôle par le prompt a <strong>prouvé</strong> qu'il ne tenait pas. Trois piliers en découlent.</p>
+
+  <div class="trio">
+    <div class="t" style="--dot:var(--d-2)">
+      <div class="ic">🛡️</div>
+      <h4>Décider</h4>
+      <p>Une policy versionnable décide <code class="inline">allow</code> / <code class="inline">ask</code> / <code class="inline">deny</code> pour chaque action, de façon déterministe et testable.</p>
+    </div>
+    <div class="t" style="--dot:var(--d-4)">
+      <div class="ic">🔌</div>
+      <h4>Appliquer</h4>
+      <p>Un serveur MCP que l'agent interroge <em>avant</em> d'agir : le guard applique la règle en direct et trace tout.</p>
+    </div>
+    <div class="t" style="--dot:var(--d-3)">
+      <div class="ic">🔍</div>
+      <h4>Vérifier</h4>
+      <p>Un audit supply-chain des serveurs MCP auxquels l'agent se connecte : d'où vient leur code, est-il épinglé ?</p>
+    </div>
+  </div>
+
+  <nav class="toc">
+    <a href="#policy" style="--dot:var(--d-2)">La policy (le moteur)</a>
+    <a href="#runtime" style="--dot:var(--d-4)">L'enforcement runtime</a>
+    <a href="#supply" style="--dot:var(--d-3)">La supply-chain &amp; le local</a>
+  </nav>
+
+  <!-- ================= LA POLICY ================= -->
+  <section class="domain" id="policy" style="--dot:var(--d-2)">
+    <div class="domain-head">
+      <h2>La policy — le moteur déterministe</h2>
+      <span class="count">2 commandes</span>
+    </div>
+    <p class="domain-sub">Le <strong>cœur du produit</strong>. Une action d'agent = trois chaînes : <code class="inline">outil × cible × contexte</code>. Le moteur les compare à des règles versionnées et renvoie une décision. Pur, déterministe, testable — la même entrée donne toujours la même décision.</p>
+
+    <div class="cards">
+
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">agentguard init</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Écrit un <code class="inline">agentguard.yaml</code> de départ, commenté et <strong>fail-safe</strong>, que tu peux lire, éditer et committer.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Au démarrage d'un projet, pour poser les règles de base et les versionner avec le code qu'elles gardent.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">La policy par défaut bloque déjà la destruction prod irréversible (delete namespace, terraform destroy, <code class="inline">rm -rf</code>), demande confirmation avant un changement d'état prod, et laisse passer la lecture seule.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">agentguard policy test <span class="pill tag">le démo-killer</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Simule <strong>une</strong> action et affiche la décision + la règle qui a matché. <code class="inline">--tool</code> / <code class="inline">--target</code> / <code class="inline">--context</code>.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Pour prouver qu'une règle fait ce que tu crois <strong>avant</strong> qu'un agent ne tourne. Et en CI : le code de sortie encode la décision (2 = deny), donc une action interdite <strong>fait échouer le job</strong>.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">C'est la boucle de feedback rapide. Avec <code class="inline">--json</code>, la même sortie est lisible par une machine.</div></div>
+        </div>
+        <div class="demo-block">
+          <div class="demo-title">Les 3 décisions en un écran</div>
+          <pre class="term">$ agentguard policy test --tool shell \
+    --target <span class="s">"kubectl delete namespace payments"</span> --context <span class="s">prod</span>
+  <span class="warn2">✗ DENY</span>   Deleting a production namespace is forbidden by policy.
+
+$ agentguard policy test --target <span class="s">"kubectl scale deploy api"</span> --context <span class="s">prod</span>
+  <span class="warn2">? ASK</span>    This changes Kubernetes resources on a production-like context.
+
+$ agentguard policy test --target <span class="s">"kubectl get pods"</span> --context <span class="s">prod</span>
+  <span class="s">✓ ALLOW</span></pre>
+          <p class="demo-cap">La même action hors prod, ou en lecture seule, passe directement. La décision ne dépend jamais de ce que le modèle « voulait ».</p>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « Dire à un LLM <i>ne supprime jamais la prod</i> dans son prompt ne tient pas — l'incident Replit a supprimé une base prod malgré onze interdictions en majuscules, et l'OWASP LLM06 dit d'implémenter l'autorisation <b>en aval, pas dans le modèle</b>. Donc j'applique sur l'<b>action</b>, pas sur le modèle. »</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= RUNTIME ================= -->
+  <section class="domain" id="runtime" style="--dot:var(--d-4)">
+    <div class="domain-head">
+      <h2>L'enforcement runtime</h2>
+      <span class="count">2 commandes</span>
+    </div>
+    <p class="domain-sub">Là où le guard passe de <strong>simulateur</strong> à <strong>vrai pare-feu</strong> : un serveur MCP que l'agent interroge en direct, et un journal qui garde la trace de tout ce qu'il a tenté.</p>
+
+    <div class="cards">
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">agentguard proxy <span class="pill tag">le cœur AgentOps</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Un serveur <strong>MCP</strong> (le standard 2026 pour brancher des outils à une IA) exposant un outil <code class="inline">guard</code>. L'agent l'appelle <strong>avant</strong> chaque action : <code class="inline">guard(outil, cible, contexte) → allow/ask/deny</code>.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">On le branche sur le client de l'agent (Claude Code, Cursor…). L'agent demande la permission, le guard décide avec la <strong>même policy</strong> que <code class="inline">policy test</code>, et renvoie une consigne que l'agent doit respecter.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">C'est le point de contrôle unique par lequel passe chaque action. Le même moteur déterministe, mais en direct, piloté par l'agent lui-même.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « J'ai driven le serveur en vrai JSON-RPC pour le valider : un agent qui demande <code class="inline">kubectl delete namespace payments</code> sur prod se voit répondre <b>deny</b>, sans que rien ne soit exécuté — et l'action atterrit dans le journal d'audit. »</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">agentguard log</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Rejoue le <strong>journal d'audit</strong> : chaque action qu'un agent a proposée via le proxy, avec la décision, le contexte, et un compteur de tokens. Filtres <code class="inline">--prod</code> / <code class="inline">--decision deny</code> / <code class="inline">--since 7d</code>.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Après coup : « qu'a tenté mon agent contre la prod cette semaine, et le guard l'a-t-il laissé passer ? »</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Les <em>receipts</em>. Un journal append-only, local, qui répond à une question que le transcript brut du modèle ne peut pas répondre. Exportable vers Loki/SIEM pour une équipe.</div></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SUPPLY-CHAIN & LOCAL ================= -->
+  <section class="domain" id="supply" style="--dot:var(--d-3)">
+    <div class="domain-head">
+      <h2>La supply-chain &amp; le terrain local</h2>
+      <span class="count">3 commandes</span>
+    </div>
+    <p class="domain-sub">Deux compléments essentiels : vérifier <strong>d'où vient le code</strong> des serveurs MCP qu'un agent charge, et pouvoir <strong>tout démontrer sur un laptop</strong> — vrai cluster, vrai modèle, sans cloud ni GPU.</p>
+
+    <div class="cards">
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">agentguard scan &lt;mcp-config.json&gt; <span class="pill tag">ADN sécurité</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Audite les <strong>serveurs MCP</strong> déclarés dans la config d'un agent (format Claude/Cursor) et signale les drapeaux rouges supply-chain — <strong>sans jamais lancer un serveur</strong>.</div></div>
+          <div class="row"><div class="k">Ce qu'il détecte</div><div class="v"><strong>Code distant non épinglé</strong> qui s'exécute au lancement (<code class="inline">npx</code>/<code class="inline">uvx</code> sans version), une image conteneur sans digest, un <strong>secret en clair</strong> dans l'env ou les headers, un serveur en <strong>HTTP</strong> non chiffré.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Avant de laisser un agent charger un serveur d'outils, savoir d'où vient son code. Lecture seule, hors-ligne — comme le <code class="inline">verify</code> d'opsforge avec les credentials.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « Base64 n'est pas du chiffrement, <code class="inline">npx</code> sans version épinglée c'est du code mutable qui tourne à chaque démarrage. Je détecte ça sans exécuter le serveur, et je reste honnête : ça attrape les drapeaux rouges de <i>config</i>, pas le comportement runtime — ce n'est pas un substitut à relire la source. »</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">agentguard up / down <span class="pill good">démo laptop</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Monte un <strong>cluster kind jetable</strong> + déploie un <strong>modèle Ollama en CPU</strong>, en une commande. <code class="inline">down</code> supprime tout.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Pour voir le guard se déclencher contre un <strong>vrai</strong> agent, en local, sans cloud ni GPU. La feature qui rend tout le reste tangible en démo.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v"><strong>Sûr par construction :</strong> agentguard crée son <strong>propre</strong> cluster avec son <strong>propre</strong> kubeconfig — il ne touche jamais ton <code class="inline">~/.kube/config</code>, donc il ne peut pas se connecter par erreur à un vrai cluster.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « Tout est POC-able et validé de bout en bout : j'ai monté le cluster + Ollama, l'API du modèle a répondu, le guard a intercepté les tool-calls, puis j'ai tout supprimé — l'IA a codé <b>et</b> validé, comme un humain l'aurait fait. »</div>
+      </div>
+
+    </div>
+
+    <p class="domain-sub" style="margin-top:22px;">🔒 <strong>Le périmètre honnête, assumé partout :</strong> agentguard <strong>confine</strong>, il ne garantit pas. Il ne peut pas stopper l'injection de prompt (il n'y a pas de défense universelle) et ne prétend pas détecter l'intention. Toute la valeur est qu'il ignore ce que le modèle « voulait » et matche ce qu'il a <em>tenté de faire</em>. Un outil qui sur-promettrait la « sécurité IA » serait le moins digne de confiance.</p>
+  </section>
+
+  <footer>
+    Guide interne agentguard · généré pour comprendre chaque fonctionnalité et savoir en parler.<br>
+    Le détail technique vit dans le <a class="plain" href="https://github.com/Mrg77/agentguard">README du dépôt</a> (EN + FR).
+  </footer>
+
+</div>
+</body>
+</html>
