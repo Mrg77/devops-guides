@@ -18,7 +18,7 @@
     <div class="brand"><b>❯ agentguard</b> — guide interne des fonctionnalités</div>
     <h1>Un pare-feu déterministe entre un agent IA et ce qu'il a le droit de faire</h1>
     <p class="lede">Une fiche de référence pour toi : chaque commande expliquée simplement — ce qu'elle fait, quand tu la sors, et pourquoi ça compte. Écrit pour que tu puisses en parler avec assurance en entretien.</p>
-    <div class="meta">4 commandes · 3 domaines · lecture ~10 min · le frère d'<a class="plain" href="opsforge-guide.html">opsforge</a></div>
+    <div class="meta">7 fonctionnalités · 3 domaines · lecture ~11 min · le frère d'<a class="plain" href="opsforge-guide.html">opsforge</a></div>
   </header>
 
   <div class="pitch">
@@ -55,7 +55,7 @@
   <section class="domain" id="policy" style="--dot:var(--d-2)">
     <div class="domain-head">
       <h2>La policy — le moteur déterministe</h2>
-      <span class="count">2 commandes</span>
+      <span class="count">2 fonctionnalités</span>
     </div>
     <p class="domain-sub">Le <strong>cœur du produit</strong>. Une action d'agent = trois chaînes : <code class="inline">outil × cible × contexte</code>. Le moteur les compare à des règles versionnées et renvoie une décision. Pur, déterministe, testable — la même entrée donne toujours la même décision.</p>
 
@@ -100,7 +100,7 @@ $ agentguard policy test --target <span class="s">"kubectl get pods"</span> --co
   <section class="domain" id="runtime" style="--dot:var(--d-4)">
     <div class="domain-head">
       <h2>L'enforcement runtime</h2>
-      <span class="count">3 commandes</span>
+      <span class="count">3 fonctionnalités</span>
     </div>
     <p class="domain-sub">Là où le guard passe de <strong>simulateur</strong> à <strong>enforcement en direct</strong>. Deux modes, et la différence est capitale à comprendre — c'est <strong>via MCP</strong> (le standard ouvert 2026), donc <strong>indépendant de l'IDE</strong> : Claude Code, Cursor, VS Code, Windsurf… n'importe quel client MCP.</p>
 
@@ -152,7 +152,7 @@ $ agentguard policy test --target <span class="s">"kubectl get pods"</span> --co
   <section class="domain" id="supply" style="--dot:var(--d-3)">
     <div class="domain-head">
       <h2>La supply-chain &amp; le terrain local</h2>
-      <span class="count">3 commandes</span>
+      <span class="count">2 fonctionnalités</span>
     </div>
     <p class="domain-sub">Deux compléments essentiels : vérifier <strong>d'où vient le code</strong> des serveurs MCP qu'un agent charge, et pouvoir <strong>tout démontrer sur un laptop</strong> — vrai cluster, vrai modèle, sans cloud ni GPU.</p>
 
