@@ -100,20 +100,40 @@ $ agentguard policy test --target <span class="s">"kubectl get pods"</span> --co
   <section class="domain" id="runtime" style="--dot:var(--d-4)">
     <div class="domain-head">
       <h2>L'enforcement runtime</h2>
-      <span class="count">2 commandes</span>
+      <span class="count">3 commandes</span>
     </div>
-    <p class="domain-sub">Là où le guard passe de <strong>simulateur</strong> à <strong>vrai pare-feu</strong> : un serveur MCP que l'agent interroge en direct, et un journal qui garde la trace de tout ce qu'il a tenté.</p>
+    <p class="domain-sub">Là où le guard passe de <strong>simulateur</strong> à <strong>enforcement en direct</strong>. Deux modes, et la différence est capitale à comprendre — c'est <strong>via MCP</strong> (le standard ouvert 2026), donc <strong>indépendant de l'IDE</strong> : Claude Code, Cursor, VS Code, Windsurf… n'importe quel client MCP.</p>
+
+    <div class="modes-note">
+      <div class="demo-title">Deux façons de « se mettre entre » l'IA et l'outil</div>
+      <pre class="term"><span class="c">// proxy (conseil) — l'agent DEMANDE au guard avant d'agir</span>
+  agent ──guard?──> agentguard   <span class="c">// l'agent peut choisir d'ignorer → contournable</span>
+  agent ──outil───> [outil réel]
+
+<span class="c">// interpose (pare-feu) — agentguard EST sur le chemin de l'outil</span>
+  agent ──tout──> agentguard ──si allow──> [outil réel]
+                       └──si deny──> <span class="warn2">✗</span>   <span class="c">// l'amont n'est JAMAIS atteint → incontournable</span></pre>
+    </div>
 
     <div class="cards">
 
       <div class="card" style="--dot:var(--d-4)">
-        <span class="cmd">agentguard proxy <span class="pill tag">le cœur AgentOps</span></span>
+        <span class="cmd">agentguard interpose <span class="pill crit">le vrai pare-feu</span></span>
         <div class="rows">
-          <div class="row"><div class="k">C'est quoi</div><div class="v">Un serveur <strong>MCP</strong> (le standard 2026 pour brancher des outils à une IA) exposant un outil <code class="inline">guard</code>. L'agent l'appelle <strong>avant</strong> chaque action : <code class="inline">guard(outil, cible, contexte) → allow/ask/deny</code>.</div></div>
-          <div class="row"><div class="k">Quand</div><div class="v">On le branche sur le client de l'agent (Claude Code, Cursor…). L'agent demande la permission, le guard décide avec la <strong>même policy</strong> que <code class="inline">policy test</code>, et renvoie une consigne que l'agent doit respecter.</div></div>
-          <div class="row"><div class="k">Pourquoi</div><div class="v">C'est le point de contrôle unique par lequel passe chaque action. Le même moteur déterministe, mais en direct, piloté par l'agent lui-même.</div></div>
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Un <strong>proxy MCP transparent</strong> qui se place <strong>devant</strong> un vrai serveur d'outils MCP (kubectl, filesystem…). L'agent se branche sur <strong>agentguard</strong>, pas sur l'amont : il recopie les outils à l'identique, et chaque appel est <strong>forcé</strong> de passer par la policy.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Quand tu veux une garantie technique, pas de la bonne volonté. L'agent <strong>ne peut pas</strong> contourner le guard, parce qu'il n'a plus l'outil réel dans sa config — seulement agentguard.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">C'est ce qui fait mériter le mot « pare-feu » : si la policy dit deny, l'amont <strong>n'est jamais appelé</strong>. Si elle dit allow, l'appel est relayé et la réponse revient normalement.</div></div>
         </div>
-        <div class="note"><b>À dire en entretien :</b> « J'ai driven le serveur en vrai JSON-RPC pour le valider : un agent qui demande <code class="inline">kubectl delete namespace payments</code> sur prod se voit répondre <b>deny</b>, sans que rien ne soit exécuté — et l'action atterrit dans le journal d'audit. »</div>
+        <div class="note"><b>À dire en entretien :</b> « Je l'ai validé contre le <b>vrai</b> serveur MCP filesystem officiel : une lecture autorisée est relayée (l'agent obtient le contenu), une écriture interdite est refusée <b>et le fichier n'est jamais créé</b> — preuve que l'agent ne peut atteindre l'outil qu'à travers le guard. C'est de l'enforcement, pas du conseil. »</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">agentguard proxy <span class="pill">mode conseil</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Un serveur MCP exposant un outil <code class="inline">guard</code> que l'agent appelle <strong>avant</strong> chaque action : <code class="inline">guard(outil, cible, contexte) → allow/ask/deny</code>.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Utile quand tu veux surtout <strong>les traces</strong> (le journal d'audit) et que l'agent est coopératif. Plus simple à brancher que interpose.</div></div>
+          <div class="row"><div class="k">La limite (honnête)</div><div class="v">C'est <strong>consultatif</strong> : rien n'empêche techniquement un agent d'ignorer le guard et d'appeler l'outil directement. Pour une garantie, c'est <code class="inline">interpose</code> qu'il faut.</div></div>
+        </div>
       </div>
 
       <div class="card" style="--dot:var(--d-4)">
