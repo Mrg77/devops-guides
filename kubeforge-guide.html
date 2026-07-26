@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<!-- Guide KubeForge — généré depuis _TEMPLATE.html. Design partagé : devops-guide.css. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KubeForge — guide des fonctionnalités</title>
+<link rel="stylesheet" href="devops-guide.css">
+<style>
+  /* accent propre à KubeForge : le "forge-amber" de l'app, pour le distinguer
+     d'opsforge (rouge-feu) et d'agentguard (violet). */
+  :root { --accent: #d97a2b; --accent-2: #b5602a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand"><b>❯ KubeForge 🔨</b> — guide interne des fonctionnalités</div>
+    <h1>Une console web local-first pour comprendre — et optimiser — un cluster Kubernetes</h1>
+    <p class="lede">Une fiche de référence pour toi : chaque vue expliquée simplement — ce qu'elle montre, quand tu la regardes, et pourquoi ça compte. Écrit pour que tu puisses en parler avec assurance en entretien.</p>
+    <div class="meta">7 vues · 5 piliers · lecture ~10 min · le plus abouti des trois, après <a class="plain" href="opsforge-guide.html">opsforge</a> et <a class="plain" href="agentguard-guide.html">agentguard</a></div>
+  </header>
+
+  <div class="pitch">
+    <p><strong>En une phrase :</strong> les outils Kubernetes existants <em>affichent</em> ton cluster — <code class="inline">kubectl</code> est un tuyau d'incendie, <code class="inline">k9s</code> est une table sans mémoire, Lens est magnifique mais est passé closed-source derrière un login. KubeForge fait l'inverse : il <strong>analyse</strong>. Un <strong>seul binaire Go</strong> avec toute l'UI embarquée, qui parle à ton cluster <strong>depuis ta machine</strong> et n'expose <strong>rien</strong> (bind <code class="inline">127.0.0.1</code>). Il répond aux questions que les autres laissent en suspens : <strong>où je gaspille de l'argent</strong>, <strong>comment c'est câblé</strong>, <strong>est-ce que ça s'améliore</strong>, <strong>où sont les trous de sécurité</strong>.</p>
+  </div>
+
+  <p class="intro">Le pari : ne pas faire <em>un énième navigateur de ressources</em>, mais les quelques vues qui répondent à des questions concrètes. Si tu ne retiens qu'une chose : KubeForge <strong>unifie</strong> ce que l'écosystème éclate sur 4-5 outils séparés (OpenCost pour le coût, Trivy/Popeye/Polaris pour la sécu, un dashboard pour l'état).</p>
+
+  <div class="trio">
+    <div class="t" style="--dot:var(--d-1)">
+      <div class="ic">💸</div>
+      <h4>FinOps</h4>
+      <p>Où part l'argent : réservé vs. réellement utilisé, gaspillage, right-sizing, coût mensuel estimé. Une treemap par namespace.</p>
+    </div>
+    <div class="t" style="--dot:var(--d-2)">
+      <div class="ic">🛡️</div>
+      <h4>SecOps</h4>
+      <p>Scan de posture déterministe : pods privilégiés, accès hôte, RBAC trop large, images mutables. Chaque finding a un <em>pourquoi</em> et un fix.</p>
+    </div>
+    <div class="t" style="--dot:var(--d-3)">
+      <div class="ic">📈</div>
+      <h4>Tendances + IA</h4>
+      <p>Une mémoire (SQLite) que ni k9s ni Lens n'ont, plus une couche IA opt-in (ta propre clé) qui priorise et lit l'évolution.</p>
+    </div>
+  </div>
+
+  <nav class="toc">
+    <a href="#etat" style="--dot:var(--d-4)">L'état &amp; les ressources</a>
+    <a href="#finops" style="--dot:var(--d-1)">FinOps &amp; Storage</a>
+    <a href="#secops" style="--dot:var(--d-2)">SecOps</a>
+    <a href="#insights" style="--dot:var(--d-3)">Tendances &amp; IA</a>
+  </nav>
+
+  <!-- ================= ÉTAT & RESSOURCES ================= -->
+  <section class="domain" id="etat" style="--dot:var(--d-4)">
+    <div class="domain-head">
+      <h2>L'état &amp; les ressources — la vue d'ensemble</h2>
+      <span class="count">3 vues</span>
+    </div>
+    <p class="domain-sub">Les écrans qu'on ouvre en premier : est-ce que ça tourne, comment c'est branché, et qu'est-ce qu'il y a <em>vraiment</em> dans ce cluster.</p>
+
+    <div class="cards">
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">Overview</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">La santé du cluster d'un coup d'œil : pods (les malades remontés en premier), nodes, redémarrages, ce qui a besoin d'attention.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">L'écran d'accueil, celui qu'on regarde chaque matin ou quand un truc semble cassé.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Trier par « malade d'abord » évite de scroller 200 pods sains pour trouver le <code class="inline">CrashLoopBackOff</code>.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">Topology <span class="pill accent">signature</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Deux lentilles sur le même graphe. Une vue <strong>graphe</strong> pour le câblage — services → les pods qu'ils sélectionnent → le node de chacun (survole un service, tout son chemin s'illumine). Une vue <strong>heatmap</strong> qui reste lisible au-delà de 500 pods.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Pour comprendre « comment le trafic arrive à mes pods » sur un petit cluster, ou surveiller l'état d'un gros parc.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">C'est l'image que ni <code class="inline">k9s</code> (une table) ni Lens (un arbre de ressources) ne dessinent clairement.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">Resources <span class="pill tag">universel</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Un navigateur qui liste <strong>tous</strong> les types du cluster — natifs <em>et</em> tes CRD. Bâti sur le discovery + dynamic client de client-go.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Quand tu bosses sur un cluster self-managed avec des ressources custom faites maison, ou un opérateur qui a posé ses propres CRD.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">La plupart des dashboards ne connaissent que les types intégrés. Celui-ci liste ce que l'API server connaît, même s'il n'en a jamais entendu parler.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> lister n'importe quel kind sans le coder en dur, c'est <em>discovery client</em> (quels types existent) + <em>dynamic client</em> (les lire sans type Go généré). C'est ce qui rend l'outil universel.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= FINOPS & STORAGE ================= -->
+  <section class="domain" id="finops" style="--dot:var(--d-1)">
+    <div class="domain-head">
+      <h2>FinOps &amp; Storage — où part l'argent</h2>
+      <span class="count">2 vues</span>
+    </div>
+    <p class="domain-sub">Le cœur « optimisation ». KubeForge raisonne sur les deux vraies causes du gâchis Kubernetes : ce qui est réservé mais pas utilisé, et ce qui n'a aucune limite.</p>
+
+    <div class="cards">
+
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">FinOps <span class="pill accent">treemap signature</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Un moteur de coût et de gaspillage : réservé vs. réellement utilisé (via metrics-server), un niveau de gaspillage, une reco de right-size, un coût mensuel estimé. Une <strong>treemap</strong> range le coût par namespace, coloré du vert au rouge selon la part de gaspillage.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Revue de coûts, avant de demander plus de budget, ou pour justifier un right-sizing.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">« 83 % de la dépense conteneur est de la capacité idle » — un pod qui réserve 2 CPU et en utilise 0,1 immobilise le reste. La treemap dit <em>où regarder en premier</em>.</div></div>
+        </div>
+        <div class="note"><b>Honnête :</b> le coût est une <em>estimation</em> depuis un prix/cœur configurable, pas une facture cloud. Le but est de <strong>classer</strong> le gaspillage, pas de réconcilier des factures.</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">Storage</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">PV, PVC et StorageClass au même endroit, avec les volumes <strong>orphelins</strong> et les claims <strong>non montés</strong> mis en évidence.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Quand la facture de stockage grimpe sans raison claire, ou après une migration qui a laissé des volumes derrière.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Un volume <code class="inline">Released</code> ou un PVC que plus personne ne monte, c'est du stockage que tu paies sans l'utiliser.</div></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SECOPS ================= -->
+  <section class="domain" id="secops" style="--dot:var(--d-2)">
+    <div class="domain-head">
+      <h2>SecOps — la posture de sécurité</h2>
+      <span class="count">1 vue</span>
+    </div>
+    <p class="domain-sub">Un scan <strong>déterministe</strong> : pas de LLM, pas de devinette. La même entrée donne toujours les mêmes findings, chacun classé par sévérité.</p>
+
+    <div class="cards">
+
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">SecOps</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Il détecte : conteneurs <code class="inline">privileged</code> (critique), <code class="inline">hostNetwork</code>/<code class="inline">hostPID</code>, capabilities dangereuses (<code class="inline">SYS_ADMIN</code>), exécution en root, tags d'image mutables (<code class="inline">:latest</code>), namespaces sans NetworkPolicy, <code class="inline">cluster-admin</code> donné aux mauvais sujets.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Un audit rapide avant une mise en prod, ou pour prioriser le durcissement d'un cluster hérité.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Chaque finding vient avec un <em>pourquoi</em> en clair et un correctif (« retire <code class="inline">privileged:true</code>, n'accorde que les capabilities nécessaires »). Ça éduque autant que ça alerte.</div></div>
+        </div>
+        <div class="note"><b>La leçon (k8sgpt) :</b> le déterministe <strong>détecte</strong>, l'IA <strong>explique</strong>. Ne jamais laisser un LLM décider seul de ce qui est une faille — il paraphraserait juste la détection.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= TENDANCES & IA ================= -->
+  <section class="domain" id="insights" style="--dot:var(--d-3)">
+    <div class="domain-head">
+      <h2>Tendances &amp; IA — la mémoire, et la couche qui priorise</h2>
+      <span class="count">1 vue + IA partout</span>
+    </div>
+    <p class="domain-sub">C'est ce qui sépare un dashboard d'un outil d'<em>analyse</em> : une mémoire de l'évolution, et une IA optionnelle par-dessus.</p>
+
+    <div class="cards">
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">Insights <span class="pill accent">bande signature</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Des courbes dans le temps, enregistrées localement en SQLite. La vedette : une <strong>bande CPU réservé-vs-utilisé</strong> où l'<em>espace hachuré entre les deux EST le gaspillage</em> — il se creuse quand le sur-provisionnement s'installe, se referme quand un right-size passe.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Pour répondre à « est-ce que ça s'améliore ? » — le gaspillage monte-t-il, ce correctif de sécurité a-t-il tenu ?</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">C'est le pilier que k9s et Lens n'ont pas : ils sont <strong>instantanés</strong>, sans mémoire. Sans historique, aucune tendance n'est possible.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">Ask AI <span class="pill tag">BYOK · opt-in</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Un bouton dans le header, sur <strong>toutes</strong> les vues. Il ouvre un panneau qui <strong>résume &amp; priorise</strong> les findings, ou <strong>analyse les tendances</strong>. Tu fournis ta propre clé — Anthropic, tout endpoint compatible OpenAI, ou un <strong>Ollama local</strong> pour que rien ne quitte ta machine.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Quand un mur de findings devient « par quoi je commence ? ». L'IA transforme la liste en « voici les trois choses à corriger d'abord, et pourquoi ».</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Désactivé par défaut, tout marche sans. Ce qui part au modèle : uniquement les <em>findings</em> (compteurs, titres, chiffres) — <strong>jamais</strong> d'objets bruts du cluster ni de secrets. La clé est stockée en local (<code class="inline">0600</code>), jamais renvoyée au navigateur.</div></div>
+        </div>
+        <div class="note"><b>Angle « DevOps qui intègre l'IA » :</b> l'IA en couche d'explication opt-in, sans fuite de données par défaut — le même ADN qu'opsforge et agentguard.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= PIED DE PAGE ================= -->
+  <footer>
+    Guide interne de KubeForge · un binaire Go, l'UI embarquée, rien d'exposé.<br>
+    Le détail vit dans le <a class="plain" href="https://github.com/Mrg77/kubeforge#readme">README du dépôt</a> · <a class="plain" href="https://github.com/Mrg77/kubeforge">code source</a>.
+  </footer>
+
+</div>
+</body>
+</html>
