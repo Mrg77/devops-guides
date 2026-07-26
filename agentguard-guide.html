@@ -22,10 +22,10 @@
   </header>
 
   <div class="pitch">
-    <p><strong>En une phrase :</strong> agentguard, c'est un <strong>pare-feu policy-as-code déterministe pour les tool-calls d'un agent IA</strong> — au lieu de <em>demander</em> au modèle « ne supprime jamais la prod » (ce qui échoue), il <strong>intercepte l'action</strong> (quel outil, quelle cible, quel contexte) et applique une règle versionnée, comme un firewall applique une ACL. <strong>Local-first et Kubernetes-native.</strong> C'est un outil de <strong>confinement</strong> qui réduit le rayon de souffle d'un agent qui déraille — <em>un filet de sécurité, pas une garantie</em>.</p>
+    <p><strong>En une phrase :</strong> un agent IA moderne n'écrit plus juste du texte, il <strong>agit</strong> — il lance des commandes sur ton infra. Le souci, c'est que lui interdire quelque chose dans son prompt <strong>ne suffit pas</strong> (un vrai incident : un agent a supprimé une base de prod malgré onze interdictions en majuscules). agentguard part de l'idée inverse : au lieu de <em>demander</em> à l'IA de bien se comporter, on l'<strong>en empêche techniquement</strong> — comme un pare-feu bloque un paquet réseau, il bloque une action dangereuse avant qu'elle n'arrive. <em>Un filet de sécurité, pas une garantie</em> — et c'est déjà beaucoup.</p>
   </div>
 
-  <p class="intro">Le problème que ça résout est concret et daté de 2025-26 : les agents IA autonomes touchent à l'infra, et le contrôle par le prompt a <strong>prouvé</strong> qu'il ne tenait pas. Trois piliers en découlent.</p>
+  <p class="intro">Tout tourne autour de trois rôles. Si tu ne retiens qu'une chose de ce guide, c'est ce triptyque : <strong>décider</strong> ce qui est permis, <strong>appliquer</strong> cette décision en direct, et <strong>vérifier</strong> ce que l'agent branche sur ta machine.</p>
 
   <div class="trio">
     <div class="t" style="--dot:var(--d-2)">
