@@ -19,7 +19,7 @@
     <div class="brand"><b>❯ KubeForge 🔨</b> — guide interne des fonctionnalités</div>
     <h1>Une console web local-first pour comprendre — et optimiser — un cluster Kubernetes</h1>
     <p class="lede">Une fiche de référence pour toi : chaque vue expliquée simplement — ce qu'elle montre, quand tu la regardes, et pourquoi ça compte. Écrit pour que tu puisses en parler avec assurance en entretien.</p>
-    <div class="meta">7 vues · 5 piliers · lecture ~10 min · le plus abouti des trois, après <a class="plain" href="opsforge-guide.html">opsforge</a> et <a class="plain" href="agentguard-guide.html">agentguard</a></div>
+    <div class="meta">5 piliers · Resource stack + copilote IA · bilingue FR/EN · pensé pour les gros clusters · le plus abouti des trois, après <a class="plain" href="opsforge-guide.html">opsforge</a> et <a class="plain" href="agentguard-guide.html">agentguard</a></div>
   </header>
 
   <div class="pitch">
@@ -40,9 +40,9 @@
       <p>Scan de posture déterministe : pods privilégiés, accès hôte, RBAC trop large, images mutables. Chaque finding a un <em>pourquoi</em> et un fix.</p>
     </div>
     <div class="t" style="--dot:var(--d-3)">
-      <div class="ic">📈</div>
-      <h4>Tendances + IA</h4>
-      <p>Une mémoire (SQLite) que ni k9s ni Lens n'ont, plus une couche IA opt-in (ta propre clé) qui priorise et lit l'évolution.</p>
+      <div class="ic">💬</div>
+      <h4>Copilote IA</h4>
+      <p>Un chat ancré dans les vraies données du cluster : « pourquoi ce pod crash ? » → il lit les events et répond. Gratuit (Gemini/Groq), 9 providers, bilingue.</p>
     </div>
   </div>
 
@@ -73,12 +73,13 @@
       </div>
 
       <div class="card" style="--dot:var(--d-4)">
-        <span class="cmd">Topology <span class="pill accent">signature</span></span>
+        <span class="cmd">Topology <span class="pill accent">vue phare</span></span>
         <div class="rows">
-          <div class="row"><div class="k">C'est quoi</div><div class="v">Deux lentilles sur le même graphe. Une vue <strong>graphe</strong> pour le câblage — services → les pods qu'ils sélectionnent → le node de chacun (survole un service, tout son chemin s'illumine). Une vue <strong>heatmap</strong> qui reste lisible au-delà de 500 pods.</div></div>
-          <div class="row"><div class="k">Quand</div><div class="v">Pour comprendre « comment le trafic arrive à mes pods » sur un petit cluster, ou surveiller l'état d'un gros parc.</div></div>
-          <div class="row"><div class="k">Pourquoi</div><div class="v">C'est l'image que ni <code class="inline">k9s</code> (une table) ni Lens (un arbre de ressources) ne dessinent clairement.</div></div>
+          <div class="row"><div class="k">C'est quoi</div><div class="v"><strong>Cinq lentilles</strong> sur le même cluster. La vedette : le <strong>Resource stack</strong> — un namespace dessiné en couches, du haut niveau (Ingress → Service → Pod) au bas niveau (Config &amp; Secrets → RBAC → Storage). Chaque arête est une <em>référence réelle</em> lue dans les specs (ce Pod monte ce Secret, tourne sous ce ServiceAccount lié à ce Role, ce PVC lie ce PV). Survole = IP, image, coût mensuel ; clique = manifeste live (secrets masqués) + events ; pastille SecOps inline + badge CRD. Les 4 autres : <strong>Namespaces</strong>, <strong>Workload graph</strong> (force-directed), <strong>By node</strong>, <strong>Heatmap</strong> (500+ pods).</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Pour comprendre comment tout s'emboîte dans un namespace, débugger « pourquoi ce pod n'a pas sa config », ou surveiller un gros parc.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">C'est l'image que ni <code class="inline">k9s</code> (une table) ni Lens (un arbre de ressources) ne dessinent : comment le trafic descend jusqu'au conteneur et de quoi il dépend.</div></div>
         </div>
+        <div class="note"><b>À dire en entretien :</b> les arêtes ne sont pas devinées — elles sont lues dans les specs (volumes, serviceAccountName, selectors, subjects RBAC). L'IA n'invente rien, elle explique du déterministe.</div>
       </div>
 
       <div class="card" style="--dot:var(--d-4)">
@@ -105,13 +106,13 @@
     <div class="cards">
 
       <div class="card" style="--dot:var(--d-1)">
-        <span class="cmd">FinOps <span class="pill accent">treemap signature</span></span>
+        <span class="cmd">FinOps <span class="pill accent">dashboard</span></span>
         <div class="rows">
-          <div class="row"><div class="k">C'est quoi</div><div class="v">Un moteur de coût et de gaspillage : réservé vs. réellement utilisé (via metrics-server), un niveau de gaspillage, une reco de right-size, un coût mensuel estimé. Une <strong>treemap</strong> range le coût par namespace, coloré du vert au rouge selon la part de gaspillage.</div></div>
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Un vrai tableau de bord de coûts : une <strong>jauge d'efficacité</strong> (CPU utilisé vs réservé), le coût <strong>groupé par workload</strong> (dépliable vers les pods) avec filtre/recherche/tri, un graphe des <strong>plus gros gaspillages</strong>, et la <strong>treemap</strong> par namespace colorée du vert au rouge. Les prix sont <strong>auto-détectés</strong> depuis le cloud du cluster (<code class="inline">providerID</code> des nodes : AWS/GCP/Azure) ; un cluster local est signalé « estimation seulement ».</div></div>
           <div class="row"><div class="k">Quand</div><div class="v">Revue de coûts, avant de demander plus de budget, ou pour justifier un right-sizing.</div></div>
-          <div class="row"><div class="k">Pourquoi</div><div class="v">« 83 % de la dépense conteneur est de la capacité idle » — un pod qui réserve 2 CPU et en utilise 0,1 immobilise le reste. La treemap dit <em>où regarder en premier</em>.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">« 83 % de la dépense conteneur est de la capacité idle » — un pod qui réserve 2 CPU et en utilise 0,1 immobilise le reste. Le dashboard dit <em>où regarder en premier</em>, par workload.</div></div>
         </div>
-        <div class="note"><b>Honnête :</b> le coût est une <em>estimation</em> depuis un prix/cœur configurable, pas une facture cloud. Le but est de <strong>classer</strong> le gaspillage, pas de réconcilier des factures.</div>
+        <div class="note"><b>Honnête :</b> le coût est une <em>estimation</em> depuis un prix/cœur (auto ou éditable), pas une facture cloud. Le but est de <strong>classer</strong> le gaspillage, pas de réconcilier des factures.</div>
       </div>
 
       <div class="card" style="--dot:var(--d-1)">
@@ -137,11 +138,11 @@
     <div class="cards">
 
       <div class="card" style="--dot:var(--d-2)">
-        <span class="cmd">SecOps</span>
+        <span class="cmd">SecOps <span class="pill accent">score + audit</span></span>
         <div class="rows">
-          <div class="row"><div class="k">C'est quoi</div><div class="v">Il détecte : conteneurs <code class="inline">privileged</code> (critique), <code class="inline">hostNetwork</code>/<code class="inline">hostPID</code>, capabilities dangereuses (<code class="inline">SYS_ADMIN</code>), exécution en root, tags d'image mutables (<code class="inline">:latest</code>), namespaces sans NetworkPolicy, <code class="inline">cluster-admin</code> donné aux mauvais sujets.</div></div>
-          <div class="row"><div class="k">Quand</div><div class="v">Un audit rapide avant une mise en prod, ou pour prioriser le durcissement d'un cluster hérité.</div></div>
-          <div class="row"><div class="k">Pourquoi</div><div class="v">Chaque finding vient avec un <em>pourquoi</em> en clair et un correctif (« retire <code class="inline">privileged:true</code>, n'accorde que les capabilities nécessaires »). Ça éduque autant que ça alerte.</div></div>
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Un <strong>score de posture 0–100</strong> (calculé sur <em>tes</em> workloads, hors namespaces système), puis les findings : conteneurs <code class="inline">privileged</code>, <code class="inline">hostNetwork</code>/<code class="inline">hostPID</code>, capabilities dangereuses, exécution en root, tags d'image mutables, namespaces sans NetworkPolicy, <code class="inline">cluster-admin</code> mal attribué. Les findings identiques sont <strong>groupés</strong> (« run as root · 33 objets » au lieu de 33 lignes), le bruit système est <strong>masqué par défaut</strong>, et tout <strong>s'exporte en CSV</strong>.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Un audit rapide avant une mise en prod, ou pour prioriser le durcissement d'un cluster hérité — même à 500 pods, ça reste lisible.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">Chaque finding a un <em>pourquoi</em> en clair, un correctif, et un saut vers le Resource stack. Le score exclut les pods système (privilégiés par design) pour refléter <em>ta</em> posture, pas celle de Kubernetes.</div></div>
         </div>
         <div class="note"><b>La leçon (k8sgpt) :</b> le déterministe <strong>détecte</strong>, l'IA <strong>explique</strong>. Ne jamais laisser un LLM décider seul de ce qui est une faille — il paraphraserait juste la détection.</div>
       </div>
@@ -152,10 +153,10 @@
   <!-- ================= TENDANCES & IA ================= -->
   <section class="domain" id="insights" style="--dot:var(--d-3)">
     <div class="domain-head">
-      <h2>Tendances &amp; IA — la mémoire, et la couche qui priorise</h2>
-      <span class="count">1 vue + IA partout</span>
+      <h2>Tendances &amp; Copilote IA — la mémoire, et le chat qui explique</h2>
+      <span class="count">1 vue + chat partout</span>
     </div>
-    <p class="domain-sub">C'est ce qui sépare un dashboard d'un outil d'<em>analyse</em> : une mémoire de l'évolution, et une IA optionnelle par-dessus.</p>
+    <p class="domain-sub">C'est ce qui sépare un dashboard d'un outil d'<em>analyse</em> : une mémoire de l'évolution, et un copilote IA conversationnel par-dessus, ancré dans les vraies données.</p>
 
     <div class="cards">
 
@@ -169,13 +170,13 @@
       </div>
 
       <div class="card" style="--dot:var(--d-3)">
-        <span class="cmd">Ask AI <span class="pill tag">BYOK · opt-in</span></span>
+        <span class="cmd">Ask AI <span class="pill accent">chat cluster</span></span>
         <div class="rows">
-          <div class="row"><div class="k">C'est quoi</div><div class="v">Un bouton dans le header, sur <strong>toutes</strong> les vues. Il ouvre un panneau qui <strong>résume &amp; priorise</strong> les findings, ou <strong>analyse les tendances</strong>. Tu fournis ta propre clé — Anthropic, tout endpoint compatible OpenAI, ou un <strong>Ollama local</strong> pour que rien ne quitte ta machine.</div></div>
-          <div class="row"><div class="k">Quand</div><div class="v">Quand un mur de findings devient « par quoi je commence ? ». L'IA transforme la liste en « voici les trois choses à corriger d'abord, et pourquoi ».</div></div>
-          <div class="row"><div class="k">Pourquoi</div><div class="v">Désactivé par défaut, tout marche sans. Ce qui part au modèle : uniquement les <em>findings</em> (compteurs, titres, chiffres) — <strong>jamais</strong> d'objets bruts du cluster ni de secrets. La clé est stockée en local (<code class="inline">0600</code>), jamais renvoyée au navigateur.</div></div>
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Un bouton dans le header (sur toutes les vues) qui ouvre un <strong>chat avec ton cluster</strong>. Tu poses n'importe quelle question et la réponse est <strong>ancrée dans les scans en direct</strong> (pas une devinette) : « pourquoi <code class="inline">payments</code> crash ? » → il lit les <em>events</em> du pod → « <code class="inline">ImagePullBackOff</code>, le tag n'existe pas » + le <code class="inline">kubectl</code>. « Où je gaspille ? » → il nomme le workload + un extrait <code class="inline">resources:</code> prêt. Conversation multi-tours, questions suggérées, <strong>9 providers</strong> (Claude, ChatGPT, Gemini, Mistral, Groq, DeepSeek, Grok, OpenRouter + endpoint custom), <strong>bilingue FR/EN</strong>.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Pour débugger (« pourquoi ça marche pas ? »), optimiser (« où consolider ? »), ou auditer l'archi — en langage naturel, sans quitter la console.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v"><strong>Gratuit</strong> : Gemini et Groq donnent une clé API sans carte (mis en avant ; un abo chat type Claude Max n'inclut pas l'accès API — l'outil te le dit). Ce qui part au modèle : uniquement l'analyse et les noms de ressources — <strong>jamais</strong> d'objets bruts ni de secrets. Clé en local (<code class="inline">0600</code>).</div></div>
         </div>
-        <div class="note"><b>Angle « DevOps qui intègre l'IA » :</b> l'IA en couche d'explication opt-in, sans fuite de données par défaut — le même ADN qu'opsforge et agentguard.</div>
+        <div class="note"><b>Le moat :</b> l'IA <strong>n'invente rien</strong> — elle répond depuis le déterministe (findings + events réels) que KubeForge lui injecte. C'est le « k9s + ChatGPT » que personne ne fait bien, 100% local-first.</div>
       </div>
 
     </div>
