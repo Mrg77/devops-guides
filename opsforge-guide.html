@@ -19,7 +19,7 @@
     <div class="brand"><b>❯ opsforge</b> — guide interne des fonctionnalités</div>
     <h1>À quoi sert chaque partie de l'outil, et quand s'en servir</h1>
     <p class="lede">Une fiche de référence pour toi : chaque commande expliquée simplement — ce qu'elle fait, le moment où tu la sors, et pourquoi ça compte. Écrit pour que tu puisses en parler avec assurance.</p>
-    <div class="meta">26 commandes · 5 domaines · lecture ~14 min</div>
+    <div class="meta">27 commandes · 5 domaines · lecture ~16 min</div>
   </header>
 
   <div class="pitch">
@@ -67,7 +67,7 @@
       <div class="card" style="--dot:var(--d-1)">
         <span class="cmd">opsforge</span>
         <div class="rows">
-          <div class="row"><div class="k">C'est quoi</div><div class="v">Lancé seul, ouvre le <strong>sélecteur interactif</strong> (une interface dans le terminal) pour parcourir le catalogue de 287 outils et cocher ceux à installer. Trois onglets : Outils · Mises à jour · Sécurité.</div></div>
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Lancé seul, ouvre le <strong>sélecteur interactif</strong> (une interface dans le terminal) pour parcourir le catalogue de 288 outils et cocher ceux à installer. Trois onglets : Outils · Mises à jour · Sécurité.</div></div>
           <div class="row"><div class="k">Quand</div><div class="v">Quand tu montes une nouvelle machine ou que tu veux explorer ce qui existe sans connaître les noms par cœur.</div></div>
           <div class="row"><div class="k">Pourquoi</div><div class="v">Plus rapide et moins d'erreurs qu'installer 20 outils un par un à la main.</div></div>
         </div>
@@ -125,7 +125,7 @@
   <section class="domain" id="shell" style="--dot:var(--d-2)">
     <div class="domain-head">
       <h2>Le shell &amp; les guards</h2>
-      <span class="count">7 volets</span>
+      <span class="count">9 volets</span>
     </div>
     <p class="domain-sub">Le <strong>différenciateur</strong> du produit — ce que les autres installeurs (Homebrew, mise…) ne font pas. opsforge transforme ton shell (zsh, fish ou bash) en environnement qui te connaît, et t'empêche de faire des bêtises en prod.</p>
 
@@ -147,6 +147,7 @@
           <div class="row"><div class="k">Quand</div><div class="v">En continu, sans y penser : quand tu tapes <code class="inline">kubectl delete</code> ou <code class="inline">terraform destroy</code> sur un cluster de prod, il t'intercepte. <code class="inline">guard test</code> permet de simuler une règle sans risque.</div></div>
           <div class="row"><div class="k">Pourquoi</div><div class="v">C'est un <strong>filet de sécurité contre le geste étourdi</strong> (tu as changé de contexte sans t'en rendre compte). Il lit le contexte <strong>passivement</strong> (le fichier kubeconfig), sans jamais lancer kubectl — donc il ne peut pas déclencher un login.</div></div>
           <div class="row"><div class="k">Nouveau — <code class="inline">guard log</code></div><div class="v">Un <strong>journal d'audit</strong> : chaque fois qu'un guard se déclenche (warn/confirm/deny), c'est écrit dans une trace locale append-only. <code class="inline">guard log --prod --since 7d</code> répond à ce que ton historique shell ne peut pas dire : <strong>« qu'ai-je lancé de dangereux sur prod cette semaine, et le guard l'a-t-il laissé passer ? »</strong></div></div>
+          <div class="row"><div class="k">Nouveau — règles universelles</div><div class="v">Au-delà des règles liées à la prod, une poignée de garde-fous <strong>toujours actifs, quel que soit le contexte</strong> : <code class="inline">rm -rf /</code> (ou <code class="inline">~</code>, <code class="inline">*</code>), <code class="inline">git reset --hard</code> / <code class="inline">checkout .</code>, <code class="inline">chmod -R 777</code>, écriture disque brute (<code class="inline">dd of=/dev/…</code>, <code class="inline">mkfs</code>), <code class="inline">kubectl delete --all</code>, et un <em>warn</em> sur <code class="inline">curl … | sh</code>. Calibrés pour <strong>ne pas crier au loup</strong> (un <code class="inline">rm -rf ./build</code> passe) — ce sont les gestes qu'on regrette une fois sur mille.</div></div>
         </div>
         <div class="note"><b>À dire en entretien :</b> « Les règles sont du code (policy-as-code), versionnables et testables en CI. Et je suis clair sur les limites : c'est un filet de sécurité, <b>pas</b> une barrière de sécurité — la vraie protection prod reste les comptes séparés et les approbations CI. » Cette honnêteté est un signal de maturité.</div>
       </div>
@@ -203,6 +204,26 @@ $ opsforge guard log <span class="s">--source mcp --prod</span>
         </div>
       </div>
 
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">Complétion des variables d'env <span class="pill tag">nouveau</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">Le manque</div><div class="v">Le zsh natif ne complète que les variables <strong>déjà présentes</strong> dans ta session. Une variable que tu n'as jamais exportée (ex. <code class="inline">AWS_SECRET_ACCESS_KEY</code>) n'est <strong>jamais proposée</strong> — tu la retapes en entier à chaque fois. Aucun shell ne résout ça.</div></div>
+          <div class="row"><div class="k">C'est quoi</div><div class="v">opsforge apprend à <code class="inline">export</code> les <strong>variables standard des outils qu'il gère</strong> (AWS, GCP, Azure, Kubernetes, Terraform, Vault, Docker, GitHub…), chacune avec une description. <code class="inline">export AWS_&lt;Tab&gt;</code> liste <code class="inline">AWS_ACCESS_KEY_ID</code>, <code class="inline">AWS_SECRET_ACCESS_KEY</code>, <code class="inline">AWS_REGION</code>… qu'elles soient définies ou non.</div></div>
+          <div class="row"><div class="k">Aussi les valeurs</div><div class="v">Pour les variables sûres et énumérables : <code class="inline">AWS_PROFILE=&lt;Tab&gt;</code> lit ton <code class="inline">~/.aws/config</code>, <code class="inline">AWS_REGION=&lt;Tab&gt;</code> liste les régions, <code class="inline">TF_LOG=&lt;Tab&gt;</code> propose les niveaux. <strong>Jamais</strong> la valeur d'un secret.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « opsforge connaît déjà l'écosystème DevOps (c'est son catalogue), il est donc le mieux placé pour compléter les variables d'env qu'aucun shell ne propose — tout en refusant par conception de suggérer la valeur d'un secret. »</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">starship, intégré sans le concurrencer <span class="pill">catalogue</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v"><strong>starship</strong> (le prompt cross-shell populaire) est au catalogue. Si tu l'installes, opsforge <strong>l'initialise pour toi</strong> et <strong>s'efface</strong> : son propre prompt (gauche + le contexte kube à droite) se désactive automatiquement — pas d'édition de <code class="inline">~/.zshrc</code>, pas de double prompt, pas de contexte affiché deux fois.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Tu préfères starship au prompt maison. <code class="inline">opsforge install starship</code> et c'est câblé (<code class="inline">OPSFORGE_STARSHIP=0</code> garde le prompt opsforge si tu changes d'avis).</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">C'est la <strong>philosophie du produit</strong> : opsforge <em>installe et câble</em> l'écosystème (starship, zoxide, atuin, fzf…) plutôt que de réinventer chaque outil — et ajoute ses guards par-dessus.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « Je ne concurrence pas Ghostty/starship — je les orchestre. La valeur d'opsforge n'est pas de refaire un prompt, c'est de câbler tout l'écosystème d'un coup et d'y ajouter des garde-fous prod que ces outils n'ont pas. »</div>
+      </div>
+
     </div>
   </section>
 
@@ -210,7 +231,7 @@ $ opsforge guard log <span class="s">--source mcp --prod</span>
   <section class="domain" id="supply" style="--dot:var(--d-3)">
     <div class="domain-head">
       <h2>Sécurité &amp; supply-chain</h2>
-      <span class="count">7 commandes</span>
+      <span class="count">8 commandes</span>
     </div>
     <p class="domain-sub">Le sujet chaud de 2026. « Supply-chain » = la chaîne d'approvisionnement logicielle : <strong>d'où viennent tes outils, quelles failles ils portent, et comment le prouver</strong>. C'est ici que se trouvent les fonctionnalités que tu voulais comprendre.</p>
 
@@ -233,6 +254,16 @@ $ opsforge guard log <span class="s">--source mcp --prod</span>
           <div class="row"><div class="k">Quand</div><div class="v">Un audit d'hygiène régulier de ton poste, et en CI (<code class="inline">--strict</code> fait échouer le job au moindre finding ; par défaut seulement sur les risques graves).</div></div>
         </div>
         <div class="note"><b>À dire en entretien :</b> « <code class="inline">verify</code> est <b>strictement en lecture seule et hors-ligne</b> : il n'exécute <b>jamais</b> d'outil externe — en particulier jamais <code class="inline">kubectl</code>, donc lire un kubeconfig OIDC ne peut pas déclencher de login. Il <b>n'affiche jamais la valeur d'un secret</b>, seulement <i>où</i> il est et <i>pourquoi</i> c'est risqué. Il lit l'expiration d'un cert dans son PEM, celle d'un token dans son claim JWT — tout en parsant les fichiers en Go pur. Et je reste honnête : c'est un filet, pas une garantie (les trousseaux de l'OS restent illisibles). » — Sur ma propre machine, il a trouvé une clé de service account GCP en clair et 3 clés SSH sans passphrase, sans rien exécuter.</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">opsforge env [set | list | rm | load] <span class="pill tag">nouveau</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">Le problème</div><div class="v">Ré-exporter les mêmes credentials AWS/Vault/registry dans <strong>chaque nouveau terminal</strong> est pénible. Mais les mettre en clair dans <code class="inline">~/.zshrc</code> les persiste… <strong>en clair</strong> — précisément la fuite que <code class="inline">verify</code> et <code class="inline">audit --secrets</code> dénoncent.</div></div>
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Un <strong>coffre chiffré par passphrase</strong> pour tes variables d'env. <code class="inline">env set AWS_SECRET_ACCESS_KEY</code> demande la valeur <strong>masquée</strong> (jamais dans l'historique) et la chiffre. <code class="inline">env list</code> montre les <strong>noms seulement</strong>. Dans chaque terminal, <code class="inline">opsenv</code> déverrouille tout d'un coup (une passphrase par session).</div></div>
+          <div class="row"><div class="k">La garantie</div><div class="v">Le fichier <code class="inline">~/.config/opsforge/env.age</code> est <strong>chiffré au repos</strong> (age/scrypt) : un <code class="inline">cat</code> ne révèle rien, et <code class="inline">audit --secrets</code> ne le compte <strong>pas</strong> comme fuite. La crypto est déléguée à <strong>age</strong> (sa bibliothèque de référence) — aucune crypto maison.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « La bonne réponse à “je veux persister mes secrets” n'est ni “jamais” ni “dans le .zshrc” — c'est un coffre chiffré déverrouillé à la session. Et je reste honnête sur le modèle de menace : une fois déverrouillé, le secret est une variable d'env normale, visible des sous-process — inévitable pour l'utiliser. Le gain réel : <b>rien en clair sur le disque</b>, plus de retape, des dotfiles sauvegardables sans fuite. » — C'est le pendant offensif de <code class="inline">verify</code> : l'un détecte les secrets en clair, l'autre t'évite d'en créer.</div>
       </div>
 
       <div class="card" style="--dot:var(--d-3)">
@@ -354,6 +385,7 @@ $ opsforge guard log <span class="s">--source mcp --prod</span>
           <div class="row"><div class="k">C'est quoi</div><div class="v">Le <strong>cockpit en un coup d'œil</strong> : combien d'outils installés, lesquels sont à mettre à jour, l'état du shell, le thème, un résumé sécurité.</div></div>
           <div class="row"><div class="k">Quand</div><div class="v">Le matin, ou quand tu veux un état rapide sans tout scanner.</div></div>
           <div class="row"><div class="k">Pourquoi</div><div class="v">Une seule commande pour la vue d'ensemble.</div></div>
+          <div class="row"><div class="k">Nouveau — score de posture</div><div class="v">Une ligne <strong>Posture NN/100 (A–F)</strong> : un score de sécurité du poste pondéré par le vrai <strong>rayon d'impact</strong> (un secret live pèse 25, une CVE HIGH/CRITICAL 12, une mise à jour cosmétique 1). C'est le miroir du score SecOps de KubeForge — <strong>les deux produits parlent le même langage</strong> — et il pointe vers <code class="inline">opsforge advise</code> pour le plan de correction.</div></div>
         </div>
       </div>
 
@@ -377,7 +409,9 @@ $ opsforge guard log <span class="s">--source mcp --prod</span>
 
     </div>
 
-    <p class="domain-sub" style="margin-top:22px;">➕ Il reste <code class="inline">theme</code> (choisir la palette de couleurs de l'interface) et <code class="inline">completion</code> (générer l'auto-complétion du shell) — utilitaires, pas essentiels à retenir.</p>
+    <p class="domain-sub" style="margin-top:22px;">➕ Il reste <code class="inline">theme</code> (choisir la palette de couleurs de l'interface), <code class="inline">completion</code> (générer l'auto-complétion du shell) et <code class="inline">ai</code> / <code class="inline">advise</code> (le CLI d'IA que pilote opsforge, et le plan de correction priorisé par l'IA) — utilitaires et confort.</p>
+
+    <div class="note" style="margin-top:18px;"><b>Nouveau — CLI bilingue FR/EN.</b> Les commandes vitrines (<code class="inline">status</code>, <code class="inline">doctor</code>, <code class="inline">audit</code>, <code class="inline">advise</code>, <code class="inline">ai</code>) parlent <strong>français et anglais</strong>, détectés depuis ta locale ou forcés par <code class="inline">--lang fr</code> / <code class="inline">$OPSFORGE_LANG</code>. Le reste retombe sur un anglais clair (jamais une clé brute). <code class="inline">advise</code> demande même à l'IA de répondre dans ta langue. <b>À dire en entretien :</b> « i18n propre, l'anglais reste la source de vérité, ajouter une langue = ajouter une table. »</div>
   </section>
 
   <footer>
