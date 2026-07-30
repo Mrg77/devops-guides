@@ -137,6 +137,7 @@
           <div class="row"><div class="k">C'est quoi</div><div class="v">Active la couche shell : un <strong>prompt qui devient rouge en prod</strong>, la complétion, l'aide inline <code class="inline">?</code>, des alias DevOps, et les <strong>guards</strong>.</div></div>
           <div class="row"><div class="k">Quand</div><div class="v">Une fois, au setup. Puis <code class="inline">exec zsh</code> (ou fish/bash) pour activer.</div></div>
           <div class="row"><div class="k">Pourquoi</div><div class="v">Il ne remplace pas ton shell, il l'améliore. Marche sur les 3 shells (le blocage des guards est garanti sur zsh/fish, best-effort sur bash — un détail que tu peux expliquer honnêtement).</div></div>
+          <div class="row"><div class="k">Complétion dynamique</div><div class="v">Les outils avec complétion zsh native (kubectl, helm, gh, docker…) gardent la leur. Pour ceux qui n'en ont pas — <strong>terraform, tofu, terragrunt, packer</strong> — opsforge complète les sous-commandes <strong>en parsant le <code class="inline">--help</code> de l'outil à la volée</strong>, à tous les niveaux (<code class="inline">terraform state &lt;Tab&gt;</code> → list/show/mv/rm…). Même source de vérité que l'aide <code class="inline">?</code> : toujours à jour, aucune liste à maintenir.</div></div>
         </div>
       </div>
 
