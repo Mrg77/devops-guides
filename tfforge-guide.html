@@ -19,7 +19,7 @@
     <div class="brand"><b>🤖 tfforge</b> — guide interne des fonctionnalités</div>
     <h1>Un agent IA qui construit du Terraform — et ne peut pas casser la prod</h1>
     <p class="lede">Ta fiche de référence : ce que fait chaque partie de l'agent, pourquoi ça compte, et surtout ce que tu peux en dire en entretien. C'est ton pari <strong>agentic AI</strong> — écrit de A à Z pour comprendre comment un agent marche vraiment.</p>
-    <div class="meta">6 outils · 4 briques · from-scratch sur l'API Anthropic · lecture ~12 min</div>
+    <div class="meta">6 outils · mode CI · from-scratch sur l'API Anthropic · installable via brew · lecture ~14 min</div>
   </header>
 
   <div class="pitch">
@@ -103,6 +103,25 @@
       </div>
 
       <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">Des règles sécu qui attrapent ce que checkov rate <span class="pill accent">expertise</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">Le constat</div><div class="v">Un scan checkov « propre » n'est pas forcément sûr. En vrai, l'agent a laissé passer un <code class="inline">s3:ListAllMyBuckets</code> sur <code class="inline">arn:aws:s3:::*</code> — checkov-clean, mais un écart au least-privilege qu'un reviewer senior noterait.</div></div>
+          <div class="row"><div class="k">Les règles maison</div><div class="v">tfforge ajoute des règles <strong>provider-aware plus fines</strong> : wildcard de service (<code class="inline">s3:*</code>, pas juste <code class="inline">*</code>), accès S3 account-wide, <code class="inline">iam:PassRole</code> sur <code class="inline">*</code> (escalade de privilèges), <strong>SSH/RDP ouvert à <code class="inline">0.0.0.0/0</code></strong>, base <code class="inline">publicly_accessible = true</code>, HTTP en clair en transit — chacune avec une sévérité.</div></div>
+          <div class="row"><div class="k">Pourquoi ça compte</div><div class="v">C'est ce qui montre ton <strong>expertise sécu</strong> — pas juste « j'appelle checkov ». Tu sais ce qui compte vraiment (un port SSH ouvert au monde = comment les gens se font vraiment breach).</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">tfforge scan &lt;dir&gt; — le mode CI, SANS IA <span class="pill tag">intégration</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Une sous-commande <strong>déterministe, sans LLM, sans clé API, sans tokens</strong> : <code class="inline">tfforge scan ./infra --json --fail-on high</code>. Elle lance l'analyse de sécurité et <strong>sort en code non-zéro</strong> quand des findings atteignent le seuil.</div></div>
+          <div class="row"><div class="k">Quand</div><div class="v">Dans un pipeline CI : le même cerveau sécu que l'agent, mais appelable en une ligne pour <strong>gater une PR</strong>. <code class="inline">--json</code> pour un rapport machine, <code class="inline">--fail-on none</code> pour du report-only.</div></div>
+          <div class="row"><div class="k">Pourquoi ça compte</div><div class="v">Ça montre que tu penses <strong>INTÉGRATION</strong>, pas juste démo interactive. Un agent, c'est bien ; un agent dont la partie déterministe gate un CI, c'est un produit.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « Mon agent a un mode CI sans IA : <code class="inline">tfforge scan --json --fail-on high</code>, exit code non-zéro sur findings. La même logique de sécurité, exécutable dans un pipeline pour bloquer une PR non conforme. »</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
         <span class="cmd">terraform_validate — le gate syntaxe</span>
         <div class="rows">
           <div class="row"><div class="k">C'est quoi</div><div class="v">Valide que la config Terraform parse et est cohérente, avant de scanner ou planifier. Inutile de scanner du code qui ne compile pas.</div></div>
@@ -156,7 +175,7 @@
         <span class="cmd">Audit + coûts <span class="pill tag">LLMOps</span></span>
         <div class="rows">
           <div class="row"><div class="k">C'est quoi</div><div class="v">Chaque tour du modèle et chaque action gardée sont écrits dans un <strong>journal d'audit JSONL</strong> (<code class="inline">~/.local/state/tfforge/audit.jsonl</code>) — une trace revue de ce que l'agent a fait <strong>et de ce que la garde a bloqué</strong>, pas seulement ce qui s'est exécuté.</div></div>
-          <div class="row"><div class="k">Les coûts</div><div class="v">La consommation de tokens est valorisée par un tarif par modèle en <strong>coût USD estimé</strong>, affiché dans un résumé de run : <code class="inline">N turns · … tokens · M tool call(s) (K denied) · ~$cost</code>.</div></div>
+          <div class="row"><div class="k">Les coûts &amp; le budget</div><div class="v">La consommation de tokens est valorisée en <strong>coût USD estimé</strong>, affiché dans un résumé de run (<code class="inline">N turns · … tokens · M tool call(s) (K denied) · ~$cost</code>). Un <strong>budget</strong> (<code class="inline">TFFORGE_MAX_COST</code>) arrête le run avant qu'il ne dépasse un plafond — du <strong>FinOps pour agents</strong>. Et un modèle moins cher pour la routine via <code class="inline">TFFORGE_MODEL</code>.</div></div>
           <div class="row"><div class="k">Pourquoi ça compte</div><div class="v">Un agent autonome près de la vraie infra doit être <strong>reviewable</strong> (« qu'a-t-il fait, qu'a-t-il tenté, qu'a bloqué la garde ? ») et son <strong>coût visible</strong>. C'est <em>exactement</em> ce que les équipes demandent pour mettre un agent en production — et c'est là que ton profil DevOps devient rare (AI Platform / LLMOps Engineer).</div></div>
         </div>
         <div class="note"><b>À dire en entretien :</b> « J'ai ajouté la couche prod qui manque à la plupart des démos d'agents : un audit log structuré de chaque action et décision de garde, et le coût par run. Le journal est du JSON ligne-par-ligne à un chemin connu → un tail Vector/Fluent Bit l'expédie vers Loki ou un SIEM. C'est ce qui rend un agent gouvernable. »</div>
