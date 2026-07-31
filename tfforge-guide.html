@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<!-- Page de guide générée avec le template DevOps (voir _TEMPLATE.html).
+     Design partagé : devops-guide.css. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tfforge — guide des fonctionnalités</title>
+<link rel="stylesheet" href="devops-guide.css">
+<style>
+  /* accent propre à tfforge : violet "agent" + le terracotta de la gamme */
+  :root { --accent: #7c5cff; --accent-2: #e07b39; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand"><b>🤖 tfforge</b> — guide interne des fonctionnalités</div>
+    <h1>Un agent IA qui construit du Terraform — et ne peut pas casser la prod</h1>
+    <p class="lede">Ta fiche de référence : ce que fait chaque partie de l'agent, pourquoi ça compte, et surtout ce que tu peux en dire en entretien. C'est ton pari <strong>agentic AI</strong> — écrit de A à Z pour comprendre comment un agent marche vraiment.</p>
+    <div class="meta">6 outils · 4 briques · from-scratch sur l'API Anthropic · lecture ~12 min</div>
+  </header>
+
+  <div class="pitch">
+    <p><strong>En une phrase :</strong> tfforge est un <strong>agent IA qui BUILDS, valide et sécurise du Terraform</strong> — il écrit le code lui-même, le scanne (checkov + IAM/S3/chiffrement), et <strong>s'auto-corrige</strong> jusqu'à ce que ce soit propre — <strong>avec une couche de garde policy-as-code qu'il ne peut pas contourner</strong> : chaque <code class="inline">destroy</code> passe par une politique, et <strong>il ne peut pas détruire la prod</strong>. Écrit <em>from scratch</em> sur l'API Anthropic (sans framework), avec audit + coûts. <em>Le différenciateur, ce n'est pas « un LLM qui écrit du HCL » — c'est la couche de sécurité, de fiabilité et d'audit autour de l'agent.</em></p>
+  </div>
+
+  <p class="intro">Le marché est saturé d'agents qui <em>font</em> des choses, et vide d'ingénieurs qui savent <em>encadrer, sécuriser et rendre fiables</em> les agents en prod. C'est exactement là que ton profil DevOps devient rare — et c'est ce que tfforge démontre.</p>
+
+  <div class="trio">
+    <div class="t" style="--dot:var(--d-2)">
+      <div class="ic">🛡️</div>
+      <h4>Garder <span class="pill tag">le moat</span></h4>
+      <p>La même policy-as-code que les guards d'opsforge, appliquée aux actions de l'agent. Il ne peut pas <code class="inline">destroy</code> la prod — <strong>prouvé par des tests</strong>, pas promis.</p>
+    </div>
+    <div class="t" style="--dot:var(--d-3)">
+      <div class="ic">🤖</div>
+      <h4>Construire &amp; sécuriser</h4>
+      <p>Il écrit le Terraform, le scanne (checkov + IAM/S3/chiffrement), et <strong>s'auto-corrige</strong> jusqu'à ce que ce soit propre. Sécurité par défaut.</p>
+    </div>
+    <div class="t" style="--dot:var(--d-1)">
+      <div class="ic">📊</div>
+      <h4>Auditer <span class="pill">LLMOps</span></h4>
+      <p>Chaque action et décision de garde journalisée (audit JSONL), les tokens valorisés en coût. Reviewability + spend visibility = prêt pour la prod.</p>
+    </div>
+  </div>
+
+  <nav class="toc">
+    <a href="#loop"    style="--dot:var(--d-1)">La boucle agentique</a>
+    <a href="#build"   style="--dot:var(--d-3)">Build &amp; sécurité</a>
+    <a href="#guard"   style="--dot:var(--d-2)">La garde</a>
+    <a href="#scale"   style="--dot:var(--d-4)">Gros repos &amp; LLMOps</a>
+  </nav>
+
+  <!-- ================= LA BOUCLE ================= -->
+  <section class="domain" id="loop" style="--dot:var(--d-1)">
+    <div class="domain-head">
+      <h2>La boucle agentique (le déclic)</h2>
+      <span class="count">from scratch</span>
+    </div>
+    <p class="domain-sub">Le cœur, et la raison d'être pédagogique du projet : comprendre comment un agent (comme Claude Code) marche vraiment, en le codant soi-même, sans framework.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">La boucle : message → tool_use → garde → run → result → loop</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">~100 lignes de Go : on envoie à l'API un message + la liste des outils ; le modèle répond soit du texte, soit « je veux appeler cet outil » ; on <strong>passe l'action par la garde</strong>, on l'exécute, on renvoie le résultat, et on boucle jusqu'à ce que le modèle ait fini.</div></div>
+          <div class="row"><div class="k">Pourquoi from-scratch</div><div class="v">Beaucoup « apprennent l'agentic » sans jamais voir la boucle. En la codant en HTTP brut sur l'API Anthropic (pas de LangChain/SDK), Claude Code cesse d'être magique — tu vois exactement le mécanisme. C'est <strong>le déclic</strong>.</div></div>
+          <div class="row"><div class="k">Fiabilité</div><div class="v">La boucle est <strong>bornée</strong> (30 tours max) pour qu'un modèle qui déraille ne tourne pas à l'infini. Le client du modèle est une <em>interface</em> → toute la boucle est testée avec un faux client, <strong>sans clé API ni tokens</strong>.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « J'ai écrit la boucle agentique moi-même sur l'API brute — je ne me contente pas d'utiliser un agent, je sais comment il est construit : le cycle tool_use, la gestion de l'historique de messages, le bornage anti-boucle. »</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= BUILD & SÉCURITÉ ================= -->
+  <section class="domain" id="build" style="--dot:var(--d-3)">
+    <div class="domain-head">
+      <h2>Construire &amp; sécuriser (le « truc de fou »)</h2>
+      <span class="count">4 outils</span>
+    </div>
+    <p class="domain-sub">L'agent ne fait pas qu'analyser : il <strong>écrit</strong> de l'infra, la <strong>scanne</strong>, et <strong>s'auto-corrige</strong>. C'est la boucle GÉNÈRE → VALIDE → SÉCURISE → AUTO-CORRIGE.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">write_file — l'agent génère &amp; réécrit le code <span class="pill tag">build</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">L'outil qui laisse l'agent <strong>écrire des fichiers <code class="inline">.tf</code> lui-même</strong>. C'est ce qui permet la génération ET l'auto-correction : il écrit le code, le scanne, puis <strong>réécrit</strong> une version corrigée.</div></div>
+          <div class="row"><div class="k">Sécurité par défaut</div><div class="v">Le system prompt impose des défauts sûrs quand l'agent génère : S3 privé + public-access block + chiffrement, IAM <strong>least-privilege</strong> (jamais <code class="inline">Action "*"</code>), chiffrement au repos, aucun secret en clair.</div></div>
+          <div class="row"><div class="k">Confinement</div><div class="v">Les chemins sont <strong>confinés sous la racine du projet</strong> et limités aux fichiers de config/texte — l'agent ne peut pas écrire hors du projet ni s'échapper via <code class="inline">..</code>.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">security_scan — checkov + trivy/tfsec + analyse provider-aware</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Un scan de sécurité statique <strong>tolérant à l'outil disponible</strong> : il utilise checkov (référence Terraform), sinon trivy, sinon tfsec — ce qui est installé. Plus une <strong>passe maison</strong> qui signale les classiques en clair.</div></div>
+          <div class="row"><div class="k">Ce qu'elle détecte</div><div class="v">IAM avec <code class="inline">Action</code>/<code class="inline">Resource</code> en <code class="inline">"*"</code> (permissions trop larges), bucket S3 public, chiffrement S3/RDS/EBS absent, public-access-block manquant, <strong>secrets en clair</strong> dans le <code class="inline">.tf</code> — <em>sans jamais afficher la valeur du secret</em>.</div></div>
+          <div class="row"><div class="k">L'auto-correction</div><div class="v">Si le scan trouve des problèmes, l'agent <strong>réécrit le code pour les corriger</strong> et <strong>re-scanne</strong> — jusqu'à ce que ce soit propre. C'est la boucle qui rend l'agent vivant.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « Mon agent ne réimplémente pas checkov — il l'orchestre, et ajoute une analyse IAM provider-aware par-dessus. Surtout, il s'auto-corrige : il scanne, réécrit, re-scanne. En vrai, il a généré un stack S3 sécurisé que checkov a validé (13 checks passés, 0 échec). » — Honnête : les heuristiques maison <b>complètent</b> checkov, ne le remplacent pas.</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">terraform_validate — le gate syntaxe</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Valide que la config Terraform parse et est cohérente, avant de scanner ou planifier. Inutile de scanner du code qui ne compile pas.</div></div>
+          <div class="row"><div class="k">Pourquoi</div><div class="v">C'est la première étape de la boucle : si <code class="inline">validate</code> échoue, l'agent corrige et re-valide avant d'aller plus loin.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LA GARDE ================= -->
+  <section class="domain" id="guard" style="--dot:var(--d-2)">
+    <div class="domain-head">
+      <h2>La garde policy-as-code (le différenciateur)</h2>
+      <span class="count">le moat</span>
+    </div>
+    <p class="domain-sub">Ce qui distingue tfforge d'un « agent qui lance terraform ». Le <strong>même concept que les guards d'opsforge</strong>, appliqué aux actions de l'agent — ton portfolio raconte une seule histoire cohérente.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">terraform_apply / terraform_destroy, sous garde</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Une <strong>politique déclarative</strong> (règles <code class="inline">action × contexte → allow/warn/confirm/deny</code>, first-match-wins) que chaque action mutante/destructrice traverse <strong>avant</strong> de s'exécuter. La politique par défaut : <strong>DENY <code class="inline">destroy</code> sur prod</strong>, CONFIRM <code class="inline">apply</code> sur prod.</div></div>
+          <div class="row"><div class="k">Fail-closed (le point critique)</div><div class="v">La garde <strong>échoue en mode fermé</strong> : un <code class="inline">destroy</code> sur un contexte qu'elle ne peut pas <em>prouver</em> non-prod est <strong>bloqué</strong>. Elle lit le <strong>workspace Terraform passivement</strong> (fichier <code class="inline">.terraform/environment</code>), pas juste le nom du chemin — donc une prod qui ne s'appelle pas littéralement « prod » est quand même protégée.</div></div>
+          <div class="row"><div class="k">Read-only libre, YAML custom</div><div class="v">Les actions en lecture seule (plan, scan, validate) contournent la garde. Les politiques YAML personnalisées sont supportées — la logique de sécurité est <strong>de la donnée versionnable</strong>, pas codée en dur dans l'agent.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « La même policy-as-code qui me garde au clavier (opsforge) garde mon agent IA (tfforge). Mon agent ne peut pas détruire la prod — et je l'ai prouvé par des tests, y compris le cas où la prod ne s'appelle pas “prod” : la garde échoue en mode fermé plutôt que de deviner. Et je reste honnête : c'est un filet solide, pas une barrière absolue — je le combine avec des credentials cloud à privilèges minimaux (défense en profondeur). »</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SCALE & LLMOPS ================= -->
+  <section class="domain" id="scale" style="--dot:var(--d-4)">
+    <div class="domain-head">
+      <h2>Gros repos &amp; LLMOps</h2>
+      <span class="count">2 briques</span>
+    </div>
+    <p class="domain-sub">Ce qui fait passer l'agent de démo à outil qu'on laisse près de la vraie infra : lisibilité sur un gros repo, et la couche audit + coûts que les équipes exigent.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">terraform_plan — un plan lisible pour un gros repo</span>
+        <div class="rows">
+          <div class="row"><div class="k">Le problème</div><div class="v">Sur un gros repo, la sortie brute de <code class="inline">terraform plan</code> fait des centaines de lignes — illisible pour un humain, et coûteux (voire hallucinogène) à faire avaler à un LLM.</div></div>
+          <div class="row"><div class="k">La solution</div><div class="v">tfforge parse le plan en <strong>JSON structuré</strong> (<code class="inline">terraform show -json</code>) et produit un <strong>tableau</strong> : compteurs <code class="inline">+create / ~update / -destroy / ±replace</code>, <strong>changements destructeurs en premier</strong> (rouge), un warning ⚠, plafonné à 40 lignes + un rollup par type pour le reste.</div></div>
+          <div class="row"><div class="k">L'insight qui scale</div><div class="v">L'agent ne reçoit qu'un <strong>digest compact</strong> (pas les 500 lignes) → un gros plan n'explose ni le contexte ni la facture de tokens. <strong>Le déterministe compte, l'IA explique</strong> — le même pattern que KubeForge.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « Pour scaler sur un gros repo, je ne balance pas le plan brut au LLM — je le parse en Go de façon déterministe et je ne lui donne qu'un résumé. Le déterministe compte, l'IA explique. C'est la bonne architecture LLMOps : fiable, prévisible, économe en tokens. »</div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">Audit + coûts <span class="pill tag">LLMOps</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Chaque tour du modèle et chaque action gardée sont écrits dans un <strong>journal d'audit JSONL</strong> (<code class="inline">~/.local/state/tfforge/audit.jsonl</code>) — une trace revue de ce que l'agent a fait <strong>et de ce que la garde a bloqué</strong>, pas seulement ce qui s'est exécuté.</div></div>
+          <div class="row"><div class="k">Les coûts</div><div class="v">La consommation de tokens est valorisée par un tarif par modèle en <strong>coût USD estimé</strong>, affiché dans un résumé de run : <code class="inline">N turns · … tokens · M tool call(s) (K denied) · ~$cost</code>.</div></div>
+          <div class="row"><div class="k">Pourquoi ça compte</div><div class="v">Un agent autonome près de la vraie infra doit être <strong>reviewable</strong> (« qu'a-t-il fait, qu'a-t-il tenté, qu'a bloqué la garde ? ») et son <strong>coût visible</strong>. C'est <em>exactement</em> ce que les équipes demandent pour mettre un agent en production — et c'est là que ton profil DevOps devient rare (AI Platform / LLMOps Engineer).</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « J'ai ajouté la couche prod qui manque à la plupart des démos d'agents : un audit log structuré de chaque action et décision de garde, et le coût par run. Le journal est du JSON ligne-par-ligne à un chemin connu → un tail Vector/Fluent Bit l'expédie vers Loki ou un SIEM. C'est ce qui rend un agent gouvernable. »</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Guide interne tfforge · le pari agentic-AI du portfolio, aux côtés d'<a class="plain" href="opsforge-guide.html">opsforge</a>, <a class="plain" href="agentguard-guide.html">agentguard</a> et <a class="plain" href="kubeforge-guide.html">KubeForge</a>.<br>
+    Le détail technique vit dans le <a class="plain" href="https://github.com/Mrg77/tfforge">README du dépôt</a> (EN + FR).
+  </footer>
+
+</div>
+</body>
+</html>
