@@ -49,6 +49,7 @@
   <nav class="toc">
     <a href="#loop"    style="--dot:var(--d-1)">La boucle agentique</a>
     <a href="#build"   style="--dot:var(--d-3)">Build &amp; sécurité</a>
+    <a href="#audit"   style="--dot:var(--d-4)">Adopter un repo</a>
     <a href="#guard"   style="--dot:var(--d-2)">La garde</a>
     <a href="#scale"   style="--dot:var(--d-4)">Gros repos &amp; LLMOps</a>
   </nav>
@@ -131,6 +132,29 @@
           <div class="row"><div class="k">C'est quoi</div><div class="v">Valide que la config Terraform parse et est cohérente, avant de scanner ou planifier. Inutile de scanner du code qui ne compile pas.</div></div>
           <div class="row"><div class="k">Pourquoi</div><div class="v">C'est la première étape de la boucle : si <code class="inline">validate</code> échoue, l'agent corrige et re-valide avant d'aller plus loin.</div></div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ADOPTER UN REPO ================= -->
+  <section class="domain" id="audit" style="--dot:var(--d-4)">
+    <div class="domain-head">
+      <h2>Adopter un repo existant (la killer feature)</h2>
+      <span class="count">audit</span>
+    </div>
+    <p class="domain-sub">Le vrai travail DevOps, ce n'est presque jamais un fichier vierge : c'est <strong>hériter d'un repo</strong> — modules, environnements, des années de dérive — et demander « <em>par où je commence ?</em> ». <code class="inline">tfforge audit &lt;repo&gt;</code> répond à ça, sans consommer un token.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">tfforge audit &lt;repo&gt; — rapport de santé PRIORISÉ <span class="pill accent">killer feature</span></span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Il parcourt le repo <strong>en entier</strong> (chaque module, chaque environnement), lance l'analyse déterministe par dossier, et produit un <strong>rapport priorisé</strong> : les trucs les plus graves <strong>d'abord</strong>, groupés par catégorie (security / version / best-practice), avec un <strong>récap par dossier</strong> de <em>où se concentre la dette</em>. Pas un dump plat de 50 lignes — un « commence par ça ».</div></div>
+          <div class="row"><div class="k">Déterministe d'abord, IA en option</div><div class="v"><strong>Zéro token</strong> par défaut (pas de LLM) → ça gate aussi la CI (<code class="inline">--fail-on high</code>). Le flag <code class="inline">--explain</code> ajoute la couche IA <em>optionnelle</em> : avec une clé, un correctif moderne concret par finding ; <strong>sans clé, ça dégrade proprement</strong> et écrit quand même le rapport. « Le déterministe détecte, l'IA explique. »</div></div>
+          <div class="row"><div class="k">Un livrable, pas un dump terminal <span class="pill tag">HTML</span></div><div class="v"><code class="inline">--html --out sante.html</code> génère un <strong>rapport HTML autonome</strong> (aucune ressource réseau externe → ouvrable offline, joignable à un mail/une revue) : verdict de santé, findings priorisés avec bandes de sévérité, récap par dossier. Un audit qu'on <strong>montre</strong>, en clair comme en sombre.</div></div>
+          <div class="row"><div class="k">Testé sur du VRAI code</div><div class="v">Validé sur un vrai repo Terraform de monitoring Datadog/OVH (<strong>34 fichiers <code class="inline">.tf</code>, 8 dossiers</strong>). Verdict honnête : <strong>0 faille de sécu</strong> (c'est du monitoring, pas de l'infra exposée), mais 7 sous-modules sans <code class="inline">required_version</code> et pas de backend distant sur la racine. Un audit crédible <strong>ne crie pas au loup</strong>.</div></div>
+          <div class="row"><div class="k">Précision, pas du bruit</div><div class="v">Un audit qui ment se décrédibilise. Ex. corrigé en le testant : le « backend manquant » ne se signale plus <strong>par fichier ni dans chaque sous-module</strong> (un module enfant n'a jamais de backend) — il est jugé <strong>au niveau de la racine</strong>, une seule fois, au bon endroit. La précision d'un scanner compte autant que sa couverture.</div></div>
+        </div>
+        <div class="note"><b>À dire en entretien :</b> « Mon agent ne part pas d'une page blanche : <code class="inline">tfforge audit</code> adopte un repo Terraform existant et sort un rapport de santé priorisé — où commencer, pas un dump. Déterministe (0 token, gate la CI), avec un rapport HTML partageable, et une couche IA optionnelle par-dessus. Je l'ai testé sur un vrai repo de 34 fichiers et corrigé un faux positif de backend au passage : la précision d'un audit, c'est ce qui le rend crédible. »</div>
       </div>
     </div>
   </section>
