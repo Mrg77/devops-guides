@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ansible &amp; agent IA — guide des pratiques</title>
+<link rel="stylesheet" href="devops-guide.css">
+<style>
+  /* accent propre à ansforge : rouge Ansible + le terracotta de la gamme */
+  :root { --accent: #d1403f; --accent-2: #e07b39; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand"><b>⚙️ ansible</b> — guide interne des pratiques</div>
+    <h1>Un agent IA qui valide de l'Ansible en l'exécutant — parce que le lint ne voit que la forme</h1>
+    <p class="lede">Ta fiche de référence : ce que fait chaque partie de l'agent, pourquoi ça compte, et ce que tu peux en dire en entretien. Le pari ici : <strong>un playbook vert au lint peut être faux à l'exécution</strong> — et c'est démontrable.</p>
+    <div class="meta">5 pratiques · éprouvées sur une plateforme AWS réelle · 3 bugs documentés · lecture ~12 min</div>
+  </header>
+
+  <div class="pitch">
+    <p><strong>En une phrase :</strong> la méthode pour qu'un <strong>agent IA écrive de l'Ansible sans casser une flotte</strong> — rendre les templates <strong>par Ansible lui-même</strong> (pas par un script Python qui fournit les variables à la main), valide le résultat avec l'outil amont (<code class="inline">nginx -t</code>, <code class="inline">promtool</code>, <code class="inline">logrotate</code>) dans l'image épinglée, puis <strong>lance le conteneur et appelle l'endpoint réel</strong>. <em>Le différenciateur, ce n'est pas « un LLM qui écrit du YAML » — c'est la preuve d'exécution, et le fait que l'agent ne peut pas toucher une machine réelle.</em></p>
+  </div>
+
+  <p class="intro">Trois bugs d'un projet réel sont passés à travers <code class="inline">ansible-lint</code> en profil production. Aucun n'était détectable sans exécuter. C'est ce constat qui définit l'outil : <em>le lint valide la forme, l'exécution valide le comportement.</em></p>
+
+  <div class="trio">
+    <div class="t" style="--dot:var(--d-2)">
+      <div class="ic">🧪</div>
+      <h4>Prouver <span class="pill tag">pas promettre</span></h4>
+      <p>Un contrôle qui ne peut pas échouer ne prouve rien. L'agent casse volontairement l'entrée, vérifie que le contrôle sort en erreur, puis restaure.</p>
+    </div>
+    <div class="t" style="--dot:var(--d-1)">
+      <div class="ic">🔒</div>
+      <h4>Lecture seule <span class="pill tag">sur l'infra</span></h4>
+      <p>L'agent rend, exécute en conteneur jetable, rapporte. Il n'a aucun accès aux instances : appliquer reste une décision humaine.</p>
+    </div>
+    <div class="t" style="--dot:var(--d-3)">
+      <div class="ic">🔁</div>
+      <h4>Idempotence <span class="pill tag">vérifiée</span></h4>
+      <p>Un playbook se joue deux fois : le second passage doit être <code class="inline">changed=0</code>. Sinon il n'est pas idempotent, quoi qu'en dise le lint.</p>
+    </div>
+  </div>
+
+  <nav class="toc">
+    <a href="#render"  style="--dot:var(--d-1)">Rendre pour de vrai</a>
+    <a href="#run"     style="--dot:var(--d-3)">Exécuter</a>
+    <a href="#secu"    style="--dot:var(--d-2)">Sécurité</a>
+    <a href="#drift"   style="--dot:var(--d-4)">Dérive &amp; idempotence</a>
+    <a href="#ci"      style="--dot:var(--d-4)">Mode CI</a>
+  </nav>
+
+  <section class="domain" id="render" style="--dot:var(--d-1)">
+    <div class="domain-head">
+      <h2>Rendre pour de vrai (le déclic)</h2>
+      <span class="count">2 outils</span>
+    </div>
+    <p class="domain-sub">La majorité des bugs Ansible tiennent à une variable qui n'existe pas dans le contexte réel. Un script de test qui fournit les variables à la main ne les verra jamais.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">render_template — rendu par Ansible, pas par Jinja2 nu</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">L'outil rend chaque <code class="inline">.j2</code> via <code class="inline">ansible localhost -m ansible.builtin.template</code>, chargé avec les <em>vrais</em> <code class="inline">group_vars</code> et les <code class="inline">defaults</code> des rôles — exactement le mécanisme de production.</div></div>
+          <div class="row"><div class="k">Le problème</div><div class="v">Un test en Jinja2 pur passe alors que le run réel échoue. Cas vécu : <code class="inline">{{ ansible_managed }}</code> placé dans un <code class="inline">content:</code> du module <code class="inline">copy</code>. Cette variable n'est injectée que par le module <code class="inline">template</code>. Le lint validait la syntaxe, le test Python fournissait la variable à la main, et l'instance a planté au premier boot.</div></div>
+          <div class="row"><div class="k">Pourquoi ça compte</div><div class="v">C'est la différence entre <em>« la syntaxe est valide »</em> et <em>« ça produira le bon fichier sur la machine »</em>. Seul le second est une garantie.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">validate_rendered — l'outil amont, dans l'image épinglée</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Le fichier rendu part dans le binaire qui le consommera : <code class="inline">nginx -t</code>, <code class="inline">promtool check config</code>, <code class="inline">amtool check-config</code>, <code class="inline">docker compose config</code>, <code class="inline">logrotate -f</code>.</div></div>
+          <div class="row"><div class="k">Dans l'image épinglée</div><div class="v">Pas avec le binaire du poste. Une directive acceptée par nginx 1.27 peut être refusée par une autre version — valider ailleurs que dans l'image de production ne prouve rien.</div></div>
+          <div class="row"><div class="k">Fiabilité</div><div class="v">Chaque validateur est <strong>réversible</strong> : l'agent injecte une faute, confirme le code de sortie non nul, restaure. Un contrôle non testé est un faux sentiment de sécurité.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note"><b>À dire en entretien :</b> « Je ne valide jamais un template Jinja avec un script Python : je le rends par Ansible, avec les vraies variables. Un bug de mon projet est passé à travers ansible-lint parce que la variable spéciale n'existe que dans le module template — le lint voyait du Jinja valide, la machine voyait une variable indéfinie. »</div>
+  </section>
+
+  <section class="domain" id="run" style="--dot:var(--d-3)">
+    <div class="domain-head">
+      <h2>Exécuter (la killer feature)</h2>
+      <span class="count">conteneurs jetables</span>
+    </div>
+    <p class="domain-sub">Rendre et valider ne suffit pas : il reste les erreurs de <em>comportement</em>, celles qu'aucun analyseur statique ne peut voir.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">run_and_probe — lance, puis appelle l'URL du vrai consommateur</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Le conteneur est démarré avec la config rendue, puis l'agent appelle <strong>l'URL exacte que le consommateur appellera en production</strong>, depuis le bon endroit.</div></div>
+          <div class="row"><div class="k">Le cas d'école</div><div class="v">Une config nginx déclarait <code class="inline">listen 127.0.0.1:8080</code> pour <code class="inline">stub_status</code>. <code class="inline">nginx -t</code> : valide. Mais dans un conteneur, cette adresse est la loopback <em>du conteneur</em> — inatteignable depuis l'hôte, où tourne l'exporter Prometheus. La supervision nginx serait tombée silencieusement.</div></div>
+          <div class="row"><div class="k">Ce qu'on en tire</div><div class="v">L'agent teste <em>depuis l'hôte</em>, pas depuis le conteneur. La nuance — mapping Docker contre loopback interne — est invisible à la lecture et évidente à l'exécution.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">check_side_effects — ce que le changement a fait disparaître</span>
+        <div class="rows">
+          <div class="row"><div class="k">Le problème</div><div class="v">Un changement d'architecture retire des choses que personne n'avait listées. Conteneuriser nginx supprime le paquet RPM — donc <code class="inline">/etc/logrotate.d/nginx</code> qu'il fournissait. Plus aucune rotation : l'access log grossit jusqu'à saturer le volume racine.</div></div>
+          <div class="row"><div class="k">La méthode</div><div class="v">Pour chaque paquet ou service retiré, l'agent liste ce qu'il apportait (unités systemd, configs logrotate, utilisateurs, répertoires) et signale ce qui n'a pas de remplaçant. Aucun linter ne raisonne sur une absence.</div></div>
+          <div class="row"><div class="k">Vérifié en conditions réelles</div><div class="v">Le correctif logrotate a été testé dans un conteneur Linux : rotation jouée, et <strong>inode préservé</strong> — parce qu'un collecteur de logs qui suit le fichier perdrait sa position sinon. <code class="inline">copytruncate</code> n'est pas un détail cosmétique.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note"><b>À dire en entretien :</b> « Mon critère de succès n'est pas “le playbook est vert”, c'est “l'endpoint répond 200 et l'exporter arrive à scraper”. J'ai eu un cas où la config était syntaxiquement parfaite et fonctionnellement morte : un loopback de conteneur n'est pas celui de l'hôte. »</div>
+  </section>
+
+  <section class="domain" id="secu" style="--dot:var(--d-2)">
+    <div class="domain-head">
+      <h2>Sécurité — ce que l'agent ne peut pas faire</h2>
+      <span class="count">par construction</span>
+    </div>
+    <p class="domain-sub">Un agent qui écrit de la configuration système est un vecteur. La réponse n'est pas la confiance, c'est le périmètre.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">Moindre privilège, appliqué à l'agent</span>
+        <div class="rows">
+          <div class="row"><div class="k">Pas d'accès aux machines</div><div class="v">L'agent rend et exécute en conteneur local. Il n'a ni credentials cloud, ni accès SSM, ni inventaire de production. Converger une flotte reste une commande humaine.</div></div>
+          <div class="row"><div class="k">Pas d'écriture sur le dépôt</div><div class="v">Le rôle de relecture a des outils de lecture seule : il rapporte par fichier et ligne, l'humain applique. C'est le même raisonnement qu'un rôle IAM restreint à une action sur un seul préfixe.</div></div>
+          <div class="row"><div class="k">Pas de secrets</div><div class="v">Les tests tournent sur des variables d'exemple. Un mot de passe réel ne doit jamais entrer dans le contexte d'un modèle — et en contexte réglementé (santé, données personnelles), ça exclut aussi les extraits de logs applicatifs.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">audit_playbook — les failles propres à Ansible</span>
+        <div class="rows">
+          <div class="row"><div class="k">Ce qu'il cherche</div><div class="v">Secrets en clair dans les vars, <code class="inline">no_log</code> absent sur une tâche qui manipule un mot de passe, <code class="inline">shell</code> avec interpolation non échappée, <code class="inline">validate_certs: no</code>, téléchargement sans checksum, <code class="inline">become</code> plus large que nécessaire.</div></div>
+          <div class="row"><div class="k">Le motif qui revient</div><div class="v">Un binaire téléchargé depuis une release GitHub sans somme de contrôle épinglée : c'est une exécution de code arbitraire à la première compromission du dépôt amont. Version et checksum se bumpent ensemble, jamais l'un sans l'autre.</div></div>
+          <div class="row"><div class="k">Honnêteté</div><div class="v">Ces heuristiques complètent <code class="inline">ansible-lint</code>, elles ne le remplacent pas. Un filet solide, pas une barrière absolue.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note"><b>À dire en entretien :</b> « L'agent n'a aucun accès aux machines ni aux secrets. Il rend, il exécute en conteneur jetable, il rapporte. La convergence reste une action humaine — un agent qui peut appliquer en production est un incident qui attend son heure. »</div>
+  </section>
+
+  <section class="domain" id="drift" style="--dot:var(--d-4)">
+    <div class="domain-head">
+      <h2>Dérive &amp; idempotence</h2>
+      <span class="count">le contrat Ansible</span>
+    </div>
+    <p class="domain-sub">L'idempotence est la promesse fondatrice d'Ansible, et la moins vérifiée. Un playbook qui rapporte <code class="inline">changed</code> à chaque passage rend la correction de dérive illisible.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">idempotence_check — le second passage doit être vide</span>
+        <div class="rows">
+          <div class="row"><div class="k">La méthode</div><div class="v">Deux exécutions consécutives. La seconde doit rendre <code class="inline">changed=0</code>. Toute tâche encore <code class="inline">changed</code> est listée avec sa cause probable : <code class="inline">command</code> sans <code class="inline">creates</code>, <code class="inline">copy</code> d'un contenu daté, <code class="inline">changed_when</code> manquant.</div></div>
+          <div class="row"><div class="k">Pourquoi ça compte</div><div class="v">Quand un playbook est rejoué toutes les 30 minutes par un mécanisme de convergence, un faux <code class="inline">changed</code> noie les vrais. On finit par ne plus lire les rapports — et c'est là qu'une dérive réelle passe inaperçue.</div></div>
+          <div class="row"><div class="k">Ordre d'exécution</div><div class="v">L'agent signale les dépendances cachées : une section <code class="inline">roles</code> s'exécute avant les <code class="inline">tasks</code>. Un rôle qui suppose un répertoire créé plus tard dans le play échoue au premier boot d'une machine neuve — et uniquement là.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">migration_path — l'existant n'est pas vierge</span>
+        <div class="rows">
+          <div class="row"><div class="k">Le constat</div><div class="v">Les tests se font sur une machine neuve ; la réalité, c'est une machine qui porte l'état laissé par la version précédente.</div></div>
+          <div class="row"><div class="k">Cas vécu</div><div class="v">Après conteneurisation, les instances existantes gardaient l'ancien service hôte qui détenait les ports 80 et 8080. Le conteneur ne pouvait pas démarrer. Le playbook doit arrêter explicitement l'ancien service — sans effet sur les machines neuves, qui ne l'ont jamais installé.</div></div>
+          <div class="row"><div class="k">La règle</div><div class="v">Tout changement qui remplace un composant doit décrire le chemin depuis l'ancien état. Un playbook qui ne fonctionne que sur une machine neuve n'est pas idempotent, il est amnésique.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note"><b>À dire en entretien :</b> « Je teste l'idempotence en jouant deux fois : le second passage doit être à zéro changement. Et je teste le chemin de migration, pas seulement l'installation — une instance existante porte l'état de la version précédente, c'est là que ça casse. »</div>
+  </section>
+
+  <section class="domain" id="ci" style="--dot:var(--d-4)">
+    <div class="domain-head">
+      <h2>Mode CI</h2>
+      <span class="count">non bloquant</span>
+    </div>
+    <p class="domain-sub">L'agent produit un avis, pas un verdict. Un gate de CI doit rendre le même résultat sur le même diff — un modèle ne le garantit pas.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">L'agent en CI — commentaire de PR, jamais d'échec</span>
+        <div class="rows">
+          <div class="row"><div class="k">Ce qui bloque</div><div class="v">Les contrôles déterministes, et eux seuls : <code class="inline">ansible-lint</code>, <code class="inline">--syntax-check</code>, les validateurs amont sur la config rendue. Reproductibles, donc opposables.</div></div>
+          <div class="row"><div class="k">Ce qui ne bloque pas</div><div class="v">L'analyse de l'agent : effets de bord, ordre d'exécution, chemin de migration, commentaires devenus faux. Utile à lire, jamais opposable. Un pipeline qui échoue de façon non reproductible détruit la confiance qu'on a en lui.</div></div>
+          <div class="row"><div class="k">Coût</div><div class="v">Analyse restreinte au diff, pas au dépôt entier. Le rapport indique les tokens consommés et leur coût : une dépense d'infrastructure se mesure.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note"><b>À dire en entretien :</b> « L'IA commente, elle ne bloque pas. Un gate de CI doit être déterministe : même diff, même verdict, sinon l'équipe apprend à le contourner. Les linters bloquent, l'agent conseille. »</div>
+  </section>
+
+  <footer> Guide interne Ansible · les pratiques appliquées dans la plateforme medscan, aux côtés de <a class="plain" href="tfforge-guide.html">tfforge</a>, <a class="plain" href="ciforge-guide.html">le guide CI/CD</a> et <a class="plain" href="opsforge-guide.html">opsforge</a>.<br> Le détail technique vit dans le <a class="plain" href="https://github.com/Mrg77/POC-TF">dépôt de la plateforme</a>, où les trois bugs cités sont dans l'historique. </footer>
+
+</div>
+</body>
+</html>

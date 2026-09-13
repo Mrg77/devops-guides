@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CI/CD GitHub Actions &amp; agent IA — guide des pratiques</title>
+<link rel="stylesheet" href="devops-guide.css">
+<style>
+  /* accent propre à ciforge : bleu pipeline + le terracotta de la gamme */
+  :root { --accent: #2f81f7; --accent-2: #e07b39; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand"><b>🔁 ci/cd</b> — guide interne des pratiques</div>
+    <h1>Un agent IA qui durcit les pipelines GitHub Actions — supply chain, permissions, minutes</h1>
+    <p class="lede">Ta fiche de référence : ce que fait chaque partie de l'agent, pourquoi ça compte, et ce que tu peux en dire en entretien. Le pari ici : <strong>le pipeline est le chemin le plus court vers la production</strong> — et le moins audité.</p>
+    <div class="meta">5 pratiques · OIDC first · supply chain · budget de minutes · lecture ~12 min</div>
+  </header>
+
+  <div class="pitch">
+    <p><strong>En une phrase :</strong> comment <strong>durcir et optimiser des workflows GitHub Actions</strong>, et où un agent IA aide vraiment — épingler les actions tierces au SHA, réduit les <code class="inline">permissions</code> au strict nécessaire, traque les secrets exposés aux forks, et chiffre ce que coûte chaque minute gaspillée. <em>Le différenciateur, ce n'est pas « un LLM qui écrit du YAML » — c'est de traiter la CI comme une surface d'attaque, parce qu'elle en est une.</em></p>
+  </div>
+
+  <p class="intro">Un runner de CI a souvent plus de droits qu'un ingénieur : il déploie, il lit des secrets, il pousse des images. Et il exécute du code tiers sur un simple <code class="inline">uses:</code>. C'est ce déséquilibre que l'outil adresse.</p>
+
+  <div class="trio">
+    <div class="t" style="--dot:var(--d-2)">
+      <div class="ic">🔗</div>
+      <h4>Supply chain <span class="pill tag">épinglée</span></h4>
+      <p>Un tag Git se déplace. Un SHA non. Une action tierce épinglée sur <code class="inline">@v3</code> peut changer sous vos pieds sans qu'aucun diff ne l'annonce.</p>
+    </div>
+    <div class="t" style="--dot:var(--d-1)">
+      <div class="ic">🔑</div>
+      <h4>OIDC <span class="pill tag">pas de clé</span></h4>
+      <p>Une clé AWS longue durée dans les secrets GitHub est une fuite en attente. OIDC échange un jeton court contre un rôle, sans secret stocké.</p>
+    </div>
+    <div class="t" style="--dot:var(--d-3)">
+      <div class="ic">⏱️</div>
+      <h4>Minutes <span class="pill tag">chiffrées</span></h4>
+      <p>Un cache absent ou un job qui tourne pour rien se paie tous les jours. L'agent le mesure en euros, pas en ressenti.</p>
+    </div>
+  </div>
+
+  <nav class="toc">
+    <a href="#secu"    style="--dot:var(--d-2)">Supply chain</a>
+    <a href="#perms"   style="--dot:var(--d-1)">Permissions &amp; secrets</a>
+    <a href="#speed"   style="--dot:var(--d-3)">Optimisation</a>
+    <a href="#gates"   style="--dot:var(--d-4)">Gates &amp; fiabilité</a>
+    <a href="#agent"   style="--dot:var(--d-4)">L'agent dans la PR</a>
+  </nav>
+
+  <section class="domain" id="secu" style="--dot:var(--d-2)">
+    <div class="domain-head">
+      <h2>Supply chain (la surface qu'on oublie)</h2>
+      <span class="count">2 outils</span>
+    </div>
+    <p class="domain-sub">Un <code class="inline">uses:</code> exécute du code écrit par quelqu'un d'autre, avec les droits de votre pipeline. C'est la dépendance la moins revue d'un dépôt.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">pin_actions — du tag mouvant au SHA immuable</span>
+        <div class="rows">
+          <div class="row"><div class="k">Le problème</div><div class="v">Un tag est un pointeur : le mainteneur — ou quiconque compromet son compte — peut le déplacer vers un autre commit. Votre pipeline exécutera le nouveau code au prochain run, sans qu'aucun diff n'apparaisse dans votre dépôt.</div></div>
+          <div class="row"><div class="k">Ce que fait l'outil</div><div class="v">Il résout chaque action tierce vers son SHA complet et l'annote du tag d'origine en commentaire, pour rester lisible : <code class="inline">uses: owner/action@a1b2c3… # v4.1.0</code>. Puis il signale les actions non maintenues ou archivées.</div></div>
+          <div class="row"><div class="k">La nuance</div><div class="v">Les actions officielles <code class="inline">actions/*</code> sont un risque moindre, pas un risque nul. L'outil les classe séparément pour que la priorisation reste lisible — noyer un vrai risque dans cinquante avertissements, c'est le rendre invisible.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-2)">
+        <span class="cmd">fork_exposure — <code class="inline">pull_request_target</code>, le piège classique</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Ce déclencheur exécute le workflow <strong>de la branche de base</strong> avec <strong>accès aux secrets</strong>, sur une PR venant d'un fork. Combiné à un <code class="inline">checkout</code> du code de la PR, n'importe qui peut exfiltrer vos secrets en ouvrant une pull request.</div></div>
+          <div class="row"><div class="k">Ce que l'agent cherche</div><div class="v">Le couple <code class="inline">pull_request_target</code> + <code class="inline">ref</code> pointant sur la PR, les expressions <code class="inline">${{ github.event.* }}</code> interpolées dans un <code class="inline">run:</code> (injection de script via un titre de PR), et les secrets accessibles depuis un job déclenché par un fork.</div></div>
+          <div class="row"><div class="k">Pourquoi ça compte</div><div class="v">C'est une des voies d'attaque les plus documentées sur GitHub Actions, et elle survit dans les dépôts parce que le workflow <em>fonctionne</em>. Rien ne casse : c'est le propre d'une faille.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note"><b>À dire en entretien :</b> « J'épingle les actions tierces au SHA, pas au tag : un tag se déplace, et le pipeline exécuterait un autre code sans qu'aucun diff ne le montre. Et je traque <code>pull_request_target</code> avec checkout de la PR — c'est l'exfiltration de secrets la plus classique, et elle ne casse rien, donc personne ne la voit. »</div>
+  </section>
+
+  <section class="domain" id="perms" style="--dot:var(--d-1)">
+    <div class="domain-head">
+      <h2>Permissions &amp; secrets</h2>
+      <span class="count">moindre privilège</span>
+    </div>
+    <p class="domain-sub">Par défaut, le jeton d'un workflow peut écrire dans le dépôt. Presque aucun job n'en a besoin.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">least_permissions — <code class="inline">contents: read</code> et rien d'autre</span>
+        <div class="rows">
+          <div class="row"><div class="k">La méthode</div><div class="v">L'agent pose <code class="inline">permissions: contents: read</code> au niveau du workflow, puis remonte le strict nécessaire job par job : <code class="inline">pull-requests: write</code> pour celui qui commente, <code class="inline">id-token: write</code> pour celui qui prend un jeton OIDC. Un job qui ne fait que lint n'a besoin de rien d'autre que lire.</div></div>
+          <div class="row"><div class="k">Pourquoi ça compte</div><div class="v">Si une action tierce est compromise, elle hérite des droits du job. La différence entre <em>lecture</em> et <em>écriture sur le dépôt</em> est celle entre un incident et une compromission.</div></div>
+          <div class="row"><div class="k">Le parallèle</div><div class="v">C'est le même raisonnement qu'un rôle IAM restreint à une action sur un seul préfixe. La CI mérite la rigueur qu'on applique au cloud — elle a souvent plus de droits.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-1)">
+        <span class="cmd">oidc_migration — supprimer les clés longue durée</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Au lieu d'une <code class="inline">AWS_SECRET_ACCESS_KEY</code> stockée dans les secrets du dépôt, GitHub émet un jeton signé que le cloud échange contre un rôle temporaire. Aucun secret persistant, rien à faire tourner.</div></div>
+          <div class="row"><div class="k">Le point de rigueur</div><div class="v">La condition de confiance du rôle doit être restreinte au dépôt <strong>et à la branche ou l'environnement</strong>. Une condition trop large (<code class="inline">repo:*</code>) laisse n'importe quel dépôt de l'organisation assumer le rôle : le gain de sécurité est annulé.</div></div>
+          <div class="row"><div class="k">Ce que l'outil produit</div><div class="v">Le workflow migré et la politique de confiance correspondante, avec la condition <code class="inline">sub</code> écrite explicitement — pas un exemple générique à adapter au jugé.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note"><b>À dire en entretien :</b> « Le jeton par défaut d'un workflow peut écrire dans le dépôt. Je pose <code>contents: read</code> au niveau global et je ne remonte que ce dont chaque job a besoin. Et pas de clé AWS longue durée : OIDC, avec une condition de confiance restreinte au dépôt et à la branche — sinon on a juste déplacé le problème. »</div>
+  </section>
+
+  <section class="domain" id="speed" style="--dot:var(--d-3)">
+    <div class="domain-head">
+      <h2>Optimisation — les minutes se paient</h2>
+      <span class="count">chiffré</span>
+    </div>
+    <p class="domain-sub">Une CI lente n'est pas qu'un inconfort : c'est une facture mensuelle et un délai de rétroaction qui pousse les équipes à contourner.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">path_filters — ne pas tout relancer pour un README</span>
+        <div class="rows">
+          <div class="row"><div class="k">C'est quoi</div><div class="v">Un job de filtrage détermine ce qui a bougé, et les jobs lourds ne démarrent que si leur périmètre est touché. Une modification de doc ne doit pas déclencher une suite de scanners d'infrastructure.</div></div>
+          <div class="row"><div class="k">Le piège</div><div class="v">Un job conditionnel qui devient une <em>required check</em> bloque la fusion quand il est ignoré. L'agent signale la combinaison et propose le contournement (un job de synthèse qui rapporte le statut agrégé).</div></div>
+          <div class="row"><div class="k">Concurrence</div><div class="v">Sans groupe de concurrence, trois poussées successives lancent trois pipelines complets dont deux sont périmés. L'agent ajoute l'annulation des runs superflus — hors branche principale, où l'on veut garder l'historique.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-3)">
+        <span class="cmd">cache_audit — ce qui est téléchargé à chaque run</span>
+        <div class="rows">
+          <div class="row"><div class="k">Ce qu'il regarde</div><div class="v">Dépendances réinstallées sans cache, clé de cache trop large (aucun hit) ou trop étroite (jamais réutilisée), binaires d'outils retéléchargés à chaque job, image de runner surdimensionnée pour la tâche.</div></div>
+          <div class="row"><div class="k">Le chiffrage</div><div class="v">Chaque constat est traduit en minutes par mois et en coût, à partir du nombre de runs observés. « Ajouter ce cache économise ~40 min/jour » est actionnable ; « le cache c'est bien » ne l'est pas.</div></div>
+          <div class="row"><div class="k">Honnêteté</div><div class="v">Certaines optimisations ne valent pas leur complexité. L'outil marque celles dont le gain est inférieur au coût de maintenance — et recommande de ne pas les faire.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note"><b>À dire en entretien :</b> « J'ai un job de filtrage qui détermine ce qui a bougé : une PR de doc ne déclenche pas les scanners d'infra. Et je chiffre les optimisations en minutes et en euros — sinon c'est une préférence, pas un arbitrage. »</div>
+  </section>
+
+  <section class="domain" id="gates" style="--dot:var(--d-4)">
+    <div class="domain-head">
+      <h2>Gates &amp; fiabilité</h2>
+      <span class="count">déterminisme</span>
+    </div>
+    <p class="domain-sub">Un pipeline auquel on ne fait pas confiance est un pipeline qu'on contourne. La fiabilité prime sur l'exhaustivité.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">flaky_detect — l'échec intermittent coûte plus cher qu'il ne rapporte</span>
+        <div class="rows">
+          <div class="row"><div class="k">Le constat</div><div class="v">Une vérification sans <code class="inline">retries</code> sur un service qui démarre en arrière-plan échoue une fois sur dix. L'équipe relance sans lire — et le jour où l'échec est réel, personne ne le voit.</div></div>
+          <div class="row"><div class="k">Ce que l'agent cherche</div><div class="v">Appels réseau sans nouvelle tentative, attentes en durée fixe au lieu d'une condition, dépendances d'ordre implicites entre jobs, tests qui partagent un état.</div></div>
+          <div class="row"><div class="k">Le bon réflexe</div><div class="v">Attendre une <em>condition</em> (« l'endpoint répond 200 »), jamais une durée. Un <code class="inline">sleep 30</code> est soit trop court un jour de lenteur, soit du temps perdu tous les autres jours.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">gate_policy — ce qui bloque doit être reproductible</span>
+        <div class="rows">
+          <div class="row"><div class="k">La règle</div><div class="v">Un gate rend le même verdict sur le même diff, aujourd'hui et dans six mois. Linters, tests, scanners de posture : oui. Sortie d'un modèle : non.</div></div>
+          <div class="row"><div class="k">Les exceptions</div><div class="v">Une exception à un scanner se justifie <strong>sur place</strong>, en commentaire, avec sa raison. Une liste d'exclusions dans un fichier de configuration devient un cimetière que plus personne ne relit.</div></div>
+          <div class="row"><div class="k">Les tests sans credentials</div><div class="v">Une suite qui exige des accès cloud ne tourne pas sur les PR de forks et devient optionnelle de fait. Les tests au niveau du plan, avec provider simulé, tournent partout — donc ils bloquent vraiment.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note"><b>À dire en entretien :</b> « Mes gates sont déterministes, et mes tests d'infra tournent sans credentials — provider mocké, niveau plan. Un test qui a besoin d'un compte cloud ne tourne pas sur les PR externes : il finit par ne plus rien bloquer du tout. »</div>
+  </section>
+
+  <section class="domain" id="agent" style="--dot:var(--d-4)">
+    <div class="domain-head">
+      <h2>L'agent dans la PR</h2>
+      <span class="count">avis, pas verdict</span>
+    </div>
+    <p class="domain-sub">La place de l'IA dans un pipeline est celle d'un relecteur attentif, jamais celle d'un juge.</p>
+
+    <div class="cards">
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">La relecture assistée — commentaire inline, sortie toujours nulle</span>
+        <div class="rows">
+          <div class="row"><div class="k">Ce qu'il apporte</div><div class="v">Ce que les scanners ne voient pas : l'intention du changement, la cohérence entre deux workflows, un effet de bord sur un job voisin, un commentaire devenu faux après une refonte.</div></div>
+          <div class="row"><div class="k">Ce qu'il ne fait pas</div><div class="v">Il ne bloque pas, ne fusionne pas, ne pousse pas. Il n'a pas les droits d'écriture sur le dépôt — seulement de commenter. Le privilège suit la tâche.</div></div>
+          <div class="row"><div class="k">Le cas d'usage qui convainc</div><div class="v">Sur un vrai projet, une relecture automatisée a trouvé un bloquant que l'auteur avait manqué : une collection manquante dans un chemin de repli, copié incomplètement depuis un module voisin. Invisible au lint, fatal au premier boot.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--dot:var(--d-4)">
+        <span class="cmd">Ce qu'il ne faut pas faire</span>
+        <div class="rows">
+          <div class="row"><div class="k">Pas de déploiement autonome</div><div class="v">Un agent qui applique en production est un incident qui attend son heure. La livraison reste déclenchée par un humain.</div></div>
+          <div class="row"><div class="k">Pas de gate non déterministe</div><div class="v">Voir la section précédente : un pipeline qui échoue de façon imprévisible perd la confiance de l'équipe, et une équipe qui ne fait plus confiance à sa CI la contourne.</div></div>
+          <div class="row"><div class="k">Pas de données sensibles</div><div class="v">Logs applicatifs, fichiers d'état, valeurs de secrets : rien de tout ça ne part vers un service externe. En contexte réglementé, cette contrainte invalide une partie des usages possibles — et il vaut mieux le dire que le découvrir en audit.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note"><b>À dire en entretien :</b> « L'agent commente la PR, il ne la bloque pas et il n'a pas les droits d'écriture. Sur mon projet, une relecture automatisée a trouvé un bloquant que j'avais manqué — mais c'est moi qui ai décidé du correctif. L'IA propose, le déterministe décide. »</div>
+  </section>
+
+  <footer> Guide interne CI/CD · les pratiques appliquées dans la plateforme medscan, aux côtés de <a class="plain" href="tfforge-guide.html">tfforge</a>, <a class="plain" href="ansforge-guide.html">le guide Ansible</a> et <a class="plain" href="opsforge-guide.html">opsforge</a>.<br> Le détail technique vit dans le <a class="plain" href="https://github.com/Mrg77/POC-TF">dépôt de la plateforme</a>, dont la CI applique ces principes. </footer>
+
+</div>
+</body>
+</html>
