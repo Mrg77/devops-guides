@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>La méthode *forge — un contrat commun pour trois agents</title>
+<title>La méthode *forge — le contrat que suit chaque agent</title>
 <link rel="stylesheet" href="devops-guide.css">
 <style>
   /* accent propre à la méthode : vert "contrat" + le terracotta de la gamme */
@@ -15,16 +15,16 @@
 
   <header>
     <div class="brand"><b>⚖️ la méthode *forge</b> — le contrat commun des agents</div>
-    <h1>Trois agents, un seul contrat — apprendre l'un, c'est connaître les autres</h1>
-    <p class="lede">Ce que <strong>tfforge</strong>, <strong>ansforge</strong> et <strong>ciforge</strong> ont en commun : les mêmes commandes, les mêmes options, la même échelle de sévérité, et surtout la même ligne entre ce qui <em>décide</em> et ce qui <em>conseille</em>.</p>
-    <div class="meta">3 agents · 4 sous-commandes · 5 options partagées · 1 règle de gate · lecture ~8 min</div>
+    <h1>Un contrat, autant d'agents qu'il faudra — apprendre l'un, c'est connaître les suivants</h1>
+    <p class="lede">Le contrat que respecte tout agent de la famille — <strong>tfforge</strong> pour Terraform, <strong>ansforge</strong> pour Ansible, <strong>ciforge</strong> pour GitHub Actions, et ceux qui viendront : mêmes commandes, mêmes options, même échelle de sévérité, et surtout la même ligne entre ce qui <em>décide</em> et ce qui <em>conseille</em>. Ajouter un domaine ne change pas la méthode, il l'applique.</p>
+    <div class="meta">4 sous-commandes · 5 options · 1 règle de décision · 3 agents aujourd'hui · lecture ~8 min</div>
   </header>
 
   <div class="pitch">
-    <p><strong>En une phrase :</strong> chaque agent a une <strong>moitié déterministe</strong> (gratuite, sans clé API, même verdict sur la même entrée — c'est elle qui peut bloquer une CI) et une <strong>moitié agentique</strong> (qui appelle un modèle, coûte des tokens, et ne bloque jamais). <em>Le différenciateur, ce n'est pas d'avoir trois outils : c'est qu'ils se comportent pareil, et que la frontière entre les deux moitiés est explicite partout.</em></p>
+    <p><strong>En une phrase :</strong> chaque agent a une <strong>moitié déterministe</strong> (gratuite, sans clé API, même verdict sur la même entrée — c'est elle qui peut bloquer une CI) et une <strong>moitié agentique</strong> (qui appelle un modèle, coûte des tokens, et ne bloque jamais). <em>Le différenciateur, ce n'est pas le nombre d'outils : c'est qu'ils se comportent tous pareil, et que la frontière entre les deux moitiés est explicite partout. Un nouvel agent hérite du contrat, il ne le renégocie pas.</em></p>
   </div>
 
-  <p class="intro">Un outil qu'on apprend pour lui seul est un coût. Trois outils qui partagent un contrat sont un investissement : la deuxième prise en main est gratuite, et la troisième aussi.</p>
+  <p class="intro">Un outil qu'on apprend pour lui seul est un coût. Des outils qui partagent un contrat sont un investissement : la deuxième prise en main est gratuite, et toutes les suivantes aussi. C'est la raison d'être de cette page — elle décrit la méthode, pas un inventaire.</p>
 
   <div class="trio">
     <div class="t" style="--dot:var(--d-2)">
@@ -40,7 +40,7 @@
     <div class="t" style="--dot:var(--d-1)">
       <div class="ic">📄</div>
       <h4>Un rapport <span class="pill">partagé</span></h4>
-      <p>Même tri, même groupement, même JSON. Trois sorties s'agrègent en un tableau parce que leur forme est un contrat.</p>
+      <p>Même tri, même groupement, même JSON. Les sorties s'agrègent en un tableau parce que leur forme est un contrat — quel que soit le nombre d'outils.</p>
     </div>
   </div>
 
@@ -57,7 +57,7 @@
       <h2>Le contrat (ce qui ne change pas d'un agent à l'autre)</h2>
       <span class="count">4 + 5</span>
     </div>
-    <p class="domain-sub">Quatre sous-commandes, cinq options. Identiques dans les trois outils, au nom du binaire près.</p>
+    <p class="domain-sub">Quatre sous-commandes, cinq options. Identiques dans chaque agent, au nom du binaire près. Un nouvel outil les implémente avant d'implémenter quoi que ce soit d'autre.</p>
 
     <div class="cards">
       <div class="card" style="--dot:var(--d-1)">
@@ -73,16 +73,16 @@
       <div class="card" style="--dot:var(--d-1)">
         <span class="cmd">Les options partagées</span>
         <div class="rows">
-          <div class="row"><div class="k"><code class="inline">--json</code></div><div class="v">Forme stable, clés en minuscules, <code class="inline">count</code> et <code class="inline">max_severity</code> toujours présents. C'est ce qui permet d'agréger les trois outils en un tableau.</div></div>
+          <div class="row"><div class="k"><code class="inline">--json</code></div><div class="v">Forme stable, clés en minuscules, <code class="inline">count</code> et <code class="inline">max_severity</code> toujours présents. C'est ce qui permet d'agréger les sorties de plusieurs outils en un seul tableau.</div></div>
           <div class="row"><div class="k"><code class="inline">--html --out f</code></div><div class="v">Une page autonome : onglets en CSS pur, <strong>aucun JavaScript</strong>, aucune ressource externe, thèmes clair et sombre. Ouvrable hors ligne, attachable à un ticket, compatible CSP stricte.</div></div>
           <div class="row"><div class="k"><code class="inline">--explain</code></div><div class="v">La <strong>seule option qui coûte des tokens</strong>. Un appel groupé pour tout le rapport, qui rend une explication et un vrai avant/après tiré de votre code. Secrets masqués avant l'envoi.</div></div>
-          <div class="row"><div class="k"><code class="inline">--fail-on</code></div><div class="v"><code class="inline">critical</code>, <code class="inline">high</code>, <code class="inline">medium</code>, <code class="inline">low</code>, <code class="inline">info</code>, <code class="inline">none</code>. Même échelle partout, même si un outil n'émet jamais certains niveaux.</div></div>
+          <div class="row"><div class="k"><code class="inline">--fail-on</code></div><div class="v"><code class="inline">critical</code>, <code class="inline">high</code>, <code class="inline">medium</code>, <code class="inline">low</code>, <code class="inline">info</code>, <code class="inline">none</code>. Même échelle partout, même si un domaine n'atteint jamais certains niveaux.</div></div>
           <div class="row"><div class="k"><code class="inline">--top N</code></div><div class="v">Limite l'affichage. Le bandeau annonce toujours le total réel : un rapport tronqué ne doit jamais se lire comme un rapport complet.</div></div>
         </div>
       </div>
     </div>
 
-    <div class="note"><b>À dire en entretien :</b> « J'ai trois agents pour trois domaines, mais un seul contrat : mêmes sous-commandes, mêmes options, même échelle. Quelqu'un qui apprend l'un sait déjà utiliser les deux autres — l'uniformité est une décision de conception, pas un hasard. »</div>
+    <div class="note"><b>À dire en entretien :</b> « J'ai plusieurs agents pour plusieurs domaines, mais un seul contrat : mêmes sous-commandes, mêmes options, même échelle. Qui en apprend un sait utiliser les suivants, et le prochain domaine que j'outillerai héritera du même contrat plutôt que d'inventer le sien. »</div>
   </section>
 
   <section class="domain" id="frontiere" style="--dot:var(--d-2)">
@@ -120,7 +120,7 @@
       <h2>Le rapport (mutualisé, donc cohérent)</h2>
       <span class="count">1 paquet</span>
     </div>
-    <p class="domain-sub">Un seul module rend le texte, le JSON et le HTML pour les trois outils. Ils ne peuvent pas diverger.</p>
+    <p class="domain-sub">Un seul module rend le texte, le JSON et le HTML pour tous les agents. Le partager, c'est s'interdire de diverger.</p>
 
     <div class="cards">
       <div class="card" style="--dot:var(--d-3)">
@@ -142,7 +142,7 @@
       </div>
     </div>
 
-    <div class="note"><b>À dire en entretien :</b> « Un rapport de 75 lignes ne se lit pas. Je groupe par problème : 33 findings sur trois domaines, c'est six problèmes distincts — et le compte brut flattait la situation plus qu'il ne la décrivait. »</div>
+    <div class="note"><b>À dire en entretien :</b> « Un rapport de 75 lignes ne se lit pas. Je groupe par problème : sur un dépôt réel, 33 findings tous domaines confondus se ramenaient à six problèmes distincts — le compte brut dramatisait au lieu de décrire. »</div>
   </section>
 
   <section class="domain" id="garde" style="--dot:var(--d-2)">
@@ -150,7 +150,7 @@
       <h2>La garde (ce que l'agent ne peut pas faire)</h2>
       <span class="count">policy-as-code</span>
     </div>
-    <p class="domain-sub">Chaque agent porte la même mécanique de garde, appliquée à l'acte destructeur de son domaine — qui n'est pas le même partout.</p>
+    <p class="domain-sub">Chaque agent porte la même mécanique de garde, appliquée à l'acte destructeur de son domaine. C'est la première question à se poser en ajoutant un outil : dans ce domaine, qu'est-ce qui casse la production ?</p>
 
     <div class="cards">
       <div class="card" style="--dot:var(--d-2)">
@@ -181,7 +181,7 @@
       <h2>En pratique</h2>
       <span class="count">le même geste ×3</span>
     </div>
-    <p class="domain-sub">Les mêmes commandes, sur les trois domaines d'un dépôt réel.</p>
+    <p class="domain-sub">Les mêmes commandes, sur chaque domaine d'un dépôt réel.</p>
 
     <div class="cards">
       <div class="card" style="--dot:var(--d-4)">
@@ -189,7 +189,7 @@
         <div class="rows">
           <div class="row"><div class="k">Contrôler</div><div class="v"><code class="inline">tfforge scan ./terraform</code> · <code class="inline">ansforge scan ./ansible</code> · <code class="inline">ciforge scan</code></div></div>
           <div class="row"><div class="k">Rapporter</div><div class="v">Remplacer <code class="inline">scan</code> par <code class="inline">audit</code> : mêmes règles, mode rapport, et l'option <code class="inline">--html --out</code> produit un livrable à joindre à un ticket.</div></div>
-          <div class="row"><div class="k">Agréger</div><div class="v"><code class="inline">--json</code> sur les trois, et un script en fait un tableau : périmètre, total, sévérités, pire niveau. La forme JSON est un contrat, c'est ce qui rend l'agrégation possible.</div></div>
+          <div class="row"><div class="k">Agréger</div><div class="v"><code class="inline">--json</code> sur chacun, et un script en fait un tableau : périmètre, total, sévérités, pire niveau. La forme JSON est un contrat — un outil ajouté demain apparaît dans le tableau sans que le script change.</div></div>
         </div>
       </div>
 
@@ -206,7 +206,7 @@
     <div class="note"><b>À dire en entretien :</b> « Le déterministe tourne sur chaque PR et ne coûte rien. Le modèle n'intervient que quand je m'apprête à corriger — et même là, c'est le scanner qui dit si la correction a marché. »</div>
   </section>
 
-  <footer> La méthode partagée par <a class="plain" href="tfforge-guide.html">tfforge</a>, <a class="plain" href="ansforge-guide.html">ansforge</a> et <a class="plain" href="ciforge-guide.html">ciforge</a>.<br> Le code vit dans leurs dépôts : <a class="plain" href="https://github.com/Mrg77/tfforge">tfforge</a>, <a class="plain" href="https://github.com/Mrg77/ansforge">ansforge</a>, <a class="plain" href="https://github.com/Mrg77/ciforge">ciforge</a> — EN + FR. </footer>
+  <footer> Le contrat s'applique aujourd'hui à <a class="plain" href="tfforge-guide.html">tfforge</a> (Terraform), <a class="plain" href="ansforge-guide.html">ansforge</a> (Ansible) et <a class="plain" href="ciforge-guide.html">ciforge</a> (GitHub Actions) — et à tout agent qui rejoindra la famille.<br> Le code vit dans leurs dépôts : <a class="plain" href="https://github.com/Mrg77/tfforge">tfforge</a>, <a class="plain" href="https://github.com/Mrg77/ansforge">ansforge</a>, <a class="plain" href="https://github.com/Mrg77/ciforge">ciforge</a> — EN + FR. </footer>
 
 </div>
 </body>
