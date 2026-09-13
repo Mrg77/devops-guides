@@ -15,32 +15,32 @@
 
   <header>
     <div class="brand"><b>⚖️ la méthode *forge</b> — le contrat commun des agents</div>
-    <h1>Un contrat, autant d'agents qu'il faudra — apprendre l'un, c'est connaître les suivants</h1>
-    <p class="lede">Le contrat que respecte tout agent de la famille — <strong>tfforge</strong> pour Terraform, <strong>ansforge</strong> pour Ansible, <strong>ciforge</strong> pour GitHub Actions, et ceux qui viendront : mêmes commandes, mêmes options, même échelle de sévérité, et surtout la même ligne entre ce qui <em>décide</em> et ce qui <em>conseille</em>. Ajouter un domaine ne change pas la méthode, il l'applique.</p>
+    <h1>Trois agents, un seul jeu de commandes à retenir</h1>
+    <p class="lede">tfforge fait du Terraform, ansforge de l'Ansible, ciforge des workflows GitHub. Trois domaines différents, mais tu tapes les mêmes commandes dans les trois. Cette page explique ce contrat, et pourquoi le prochain agent le suivra aussi.</p>
     <div class="meta">4 sous-commandes · 5 options · 1 règle de décision · 3 agents aujourd'hui · lecture ~8 min</div>
   </header>
 
   <div class="pitch">
-    <p><strong>En une phrase :</strong> chaque agent a une <strong>moitié déterministe</strong> (gratuite, sans clé API, même verdict sur la même entrée — c'est elle qui peut bloquer une CI) et une <strong>moitié agentique</strong> (qui appelle un modèle, coûte des tokens, et ne bloque jamais). <em>Le différenciateur, ce n'est pas le nombre d'outils : c'est qu'ils se comportent tous pareil, et que la frontière entre les deux moitiés est explicite partout. Un nouvel agent hérite du contrat, il ne le renégocie pas.</em></p>
+    <p><strong>En une phrase :</strong> chaque agent fonctionne en deux modes. Un mode <strong>déterministe</strong> — pas de modèle, pas de clé API, rien à payer, et le même résultat à chaque exécution : c'est celui auquel tu peux confier une décision. Et un mode <strong>agentique</strong>, qui appelle un modèle, consomme des tokens, et ne bloque jamais rien. <em>Ce qui compte ici, ce n'est pas le nombre d'outils, c'est qu'ils se comportent tous pareil — et que tu saches toujours lequel des deux modes tu es en train d'utiliser.</em></p>
   </div>
 
-  <p class="intro">Un outil qu'on apprend pour lui seul est un coût. Des outils qui partagent un contrat sont un investissement : la deuxième prise en main est gratuite, et toutes les suivantes aussi. C'est la raison d'être de cette page — elle décrit la méthode, pas un inventaire.</p>
+  <p class="intro">Quand tu apprends un outil, tu voudrais que le suivant se comporte pareil. C'est rarement le cas, et on finit par tenir trois jeux d'options en tête. Ici c'est l'inverse : tu apprends <code class="inline">scan</code>, <code class="inline">audit</code> et <code class="inline">fix</code> une fois, et ça marche partout.</p>
 
   <div class="trio">
     <div class="t" style="--dot:var(--d-2)">
       <div class="ic">⚖️</div>
       <h4>Le déterministe <span class="pill tag">décide</span></h4>
-      <p>Ce qui bloque doit rendre le même verdict sur la même entrée, aujourd'hui et dans un an. Un modèle ne peut pas le promettre — donc il ne bloque rien.</p>
+      <p>Ce qui bloque doit donner le même résultat à chaque fois. Un modèle n'en est pas capable, donc il ne bloque rien.</p>
     </div>
     <div class="t" style="--dot:var(--d-3)">
       <div class="ic">🤖</div>
       <h4>L'agent <span class="pill tag">conseille</span></h4>
-      <p>Il explique, propose un diff avant/après, corrige quand on le lui demande. Toujours derrière une garde, toujours avec un budget.</p>
+      <p>Il t'explique le problème, te propose un avant/après, et corrige si tu lui demandes. Toujours derrière une garde, toujours avec un plafond de dépense.</p>
     </div>
     <div class="t" style="--dot:var(--d-1)">
       <div class="ic">📄</div>
       <h4>Un rapport <span class="pill">partagé</span></h4>
-      <p>Même tri, même groupement, même JSON. Les sorties s'agrègent en un tableau parce que leur forme est un contrat — quel que soit le nombre d'outils.</p>
+      <p>Même tri, même groupement, même JSON. Tu peux donc agréger les sorties dans un seul tableau, avec un script de dix lignes.</p>
     </div>
   </div>
 
@@ -57,32 +57,32 @@
       <h2>Le contrat (ce qui ne change pas d'un agent à l'autre)</h2>
       <span class="count">4 + 5</span>
     </div>
-    <p class="domain-sub">Quatre sous-commandes, cinq options. Identiques dans chaque agent, au nom du binaire près. Un nouvel outil les implémente avant d'implémenter quoi que ce soit d'autre.</p>
+    <p class="domain-sub">Quatre sous-commandes et cinq options, identiques partout. Un nouvel agent commence par les implémenter, avant même ses règles à lui.</p>
 
     <div class="cards">
       <div class="card" style="--dot:var(--d-1)">
         <span class="cmd">Les sous-commandes</span>
         <div class="rows">
-          <div class="row"><div class="k"><code class="inline">&lt;outil&gt; "&lt;tâche&gt;"</code></div><div class="v">L'agent, sur une tâche décrite en français ou en anglais. <strong>Coûte des tokens.</strong></div></div>
-          <div class="row"><div class="k"><code class="inline">scan</code></div><div class="v">Contrôle un périmètre et <strong>sort en 1</strong> au seuil demandé. Déterministe, gratuit, sans clé API. C'est la commande à laquelle on peut confier une décision.</div></div>
-          <div class="row"><div class="k"><code class="inline">audit</code></div><div class="v">Les <em>mêmes</em> règles, sur tout l'arbre, en mode rapport (sortie 0 par défaut). Pas une autre vérité : une autre intention.</div></div>
-          <div class="row"><div class="k"><code class="inline">fix</code></div><div class="v">Corrige, puis <strong>revérifie avec les règles déterministes</strong> — jamais avec le récit que le modèle fait de son propre travail. Coûte des tokens.</div></div>
+          <div class="row"><div class="k"><code class="inline">&lt;outil&gt; "&lt;tâche&gt;"</code></div><div class="v">Tu décris ce que tu veux, l'agent le fait. <strong>Coûte des tokens.</strong></div></div>
+          <div class="row"><div class="k"><code class="inline">scan</code></div><div class="v">Vérifie un périmètre et <strong>sort en 1</strong> si quelque chose dépasse le seuil. Gratuit, sans clé API, résultat identique à chaque fois — c'est celle que tu mets dans un pipeline.</div></div>
+          <div class="row"><div class="k"><code class="inline">audit</code></div><div class="v">Les <em>mêmes</em> règles, sur tout l'arbre, mais en mode lecture : sortie 0 par défaut. Même vérité que <code class="inline">scan</code>, tu veux juste regarder au lieu de bloquer.</div></div>
+          <div class="row"><div class="k"><code class="inline">fix</code></div><div class="v">L'agent corrige, puis le scanner déterministe repasse derrière pour vérifier. On ne se fie jamais au modèle pour dire s'il a bien travaillé. Coûte des tokens.</div></div>
         </div>
       </div>
 
       <div class="card" style="--dot:var(--d-1)">
         <span class="cmd">Les options partagées</span>
         <div class="rows">
-          <div class="row"><div class="k"><code class="inline">--json</code></div><div class="v">Forme stable, clés en minuscules, <code class="inline">count</code> et <code class="inline">max_severity</code> toujours présents. C'est ce qui permet d'agréger les sorties de plusieurs outils en un seul tableau.</div></div>
-          <div class="row"><div class="k"><code class="inline">--html --out f</code></div><div class="v">Une page autonome : onglets en CSS pur, <strong>aucun JavaScript</strong>, aucune ressource externe, thèmes clair et sombre. Ouvrable hors ligne, attachable à un ticket, compatible CSP stricte.</div></div>
-          <div class="row"><div class="k"><code class="inline">--explain</code></div><div class="v">La <strong>seule option qui coûte des tokens</strong>. Un appel groupé pour tout le rapport, qui rend une explication et un vrai avant/après tiré de votre code. Secrets masqués avant l'envoi.</div></div>
+          <div class="row"><div class="k"><code class="inline">--json</code></div><div class="v">Même structure pour tous : clés en minuscules, <code class="inline">count</code> et <code class="inline">max_severity</code> toujours là. C'est ce qui te permet d'agréger plusieurs outils dans un tableau.</div></div>
+          <div class="row"><div class="k"><code class="inline">--html --out f</code></div><div class="v">Un fichier HTML autonome, avec des onglets en CSS pur et <strong>zéro JavaScript</strong>. Tu peux l'ouvrir hors ligne, le joindre à un ticket, ou le laisser passer une CSP stricte. Clair et sombre selon ton OS.</div></div>
+          <div class="row"><div class="k"><code class="inline">--explain</code></div><div class="v">La <strong>seule option qui coûte des tokens</strong>. Un seul appel pour tout le rapport, qui te rend une explication et un avant/après pris dans ton code. Les secrets sont masqués avant l'envoi.</div></div>
           <div class="row"><div class="k"><code class="inline">--fail-on</code></div><div class="v"><code class="inline">critical</code>, <code class="inline">high</code>, <code class="inline">medium</code>, <code class="inline">low</code>, <code class="inline">info</code>, <code class="inline">none</code>. Même échelle partout, même si un domaine n'atteint jamais certains niveaux.</div></div>
-          <div class="row"><div class="k"><code class="inline">--top N</code></div><div class="v">Limite l'affichage. Le bandeau annonce toujours le total réel : un rapport tronqué ne doit jamais se lire comme un rapport complet.</div></div>
+          <div class="row"><div class="k"><code class="inline">--top N</code></div><div class="v">Limite l'affichage aux N pires problèmes. Le bandeau annonce quand même le total, pour que tu ne prennes pas un rapport tronqué pour un rapport complet.</div></div>
         </div>
       </div>
     </div>
 
-    <div class="note"><b>À dire en entretien :</b> « J'ai plusieurs agents pour plusieurs domaines, mais un seul contrat : mêmes sous-commandes, mêmes options, même échelle. Qui en apprend un sait utiliser les suivants, et le prochain domaine que j'outillerai héritera du même contrat plutôt que d'inventer le sien. »</div>
+    <div class="note"><b>À dire en entretien :</b> « J'ai un agent par domaine, mais ils partagent les mêmes commandes et les mêmes options. C'était volontaire : je ne voulais pas retenir trois interfaces différentes, et le prochain que j'écrirai suivra le même contrat. »</div>
   </section>
 
   <section class="domain" id="frontiere" style="--dot:var(--d-2)">
@@ -90,29 +90,29 @@
       <h2>La frontière (ce qui décide, ce qui conseille)</h2>
       <span class="count">la règle</span>
     </div>
-    <p class="domain-sub">C'est le cœur de la méthode : pourquoi ne pas avoir un seul point d'entrée qui ferait tout ?</p>
+    <p class="domain-sub">C'est la question qui vient naturellement : pourquoi ne pas avoir une seule commande qui fait tout, intelligemment ?</p>
 
     <div class="cards">
       <div class="card" style="--dot:var(--d-2)">
         <span class="cmd">Pourquoi deux moitiés, et pas un outil « intelligent »</span>
         <div class="rows">
-          <div class="row"><div class="k">La raison</div><div class="v">Ce qui <strong>bloque</strong> doit être <strong>reproductible</strong> : même entrée, même verdict, aujourd'hui et dans un an. Un modèle ne le garantit pas — la même question posée deux fois peut donner deux réponses. Un contrôle bloquant dont on ne peut pas prévoir le résultat, on apprend vite à le contourner.</div></div>
-          <div class="row"><div class="k">La conséquence</div><div class="v"><code class="inline">scan</code> et <code class="inline">audit</code> n'appellent aucun modèle et ne demandent aucune clé. On les lance autant qu'on veut, gratuitement, et on peut leur confier une décision.</div></div>
-          <div class="row"><div class="k">Le corollaire</div><div class="v">Le code de sortie <strong>compte les findings</strong>, il ne cherche jamais une chaîne dans le texte affiché. Le rapport est coloré : une décision ne doit pas dépendre de la façon dont quelque chose s'affiche à l'écran.</div></div>
+          <div class="row"><div class="k">La raison</div><div class="v">Parce qu'un contrôle qui bloque doit être prévisible. Pose deux fois la même question à un modèle, tu peux obtenir deux réponses. Et une CI qui échoue un jour sur deux sans raison claire, l'équipe finit par la contourner au lieu de la corriger.</div></div>
+          <div class="row"><div class="k">La conséquence</div><div class="v"><code class="inline">scan</code> et <code class="inline">audit</code> n'appellent aucun modèle et ne demandent aucune clé. Tu peux les lancer sur chaque commit sans rien payer, et leur confier une décision.</div></div>
+          <div class="row"><div class="k">Le corollaire</div><div class="v">Le code de sortie compte les findings au lieu de chercher un mot dans le texte affiché. Ça paraît évident, mais le rapport est coloré : si tu grep dessus, un changement de couleur casse ton gate.</div></div>
         </div>
       </div>
 
       <div class="card" style="--dot:var(--d-2)">
         <span class="cmd">Ce que le modèle apporte, et ce qu'il ne doit pas faire</span>
         <div class="rows">
-          <div class="row"><div class="k">Du jugement</div><div class="v">Choisir entre deux corrections possibles, comprendre pourquoi un contournement existe, formuler ce qu'une règle a détecté. <em>tfforge</em> réécrit une politique IAM trop large sans casser ce qui en dépend ; <em>ansforge</em> distingue un <code class="inline">become</code> global assumé d'un oubli ; <em>ciforge</em> réorganise des permissions. Une expression régulière ne fait rien de tout ça.</div></div>
-          <div class="row"><div class="k">Pas du mécanique</div><div class="v">Quand la correction est une substitution de chaînes, le modèle est une dépense inutile — et une source d'erreur de plus. Chaque outil garde une commande déterministe pour ces cas : <code class="inline">ciforge pin</code> résout les empreintes via l'API GitHub, <code class="inline">tfforge fix</code> applique ses règles connues. Payer un modèle pour remplacer du texte serait un gâchis.</div></div>
-          <div class="row"><div class="k">Avec un budget</div><div class="v"><code class="inline">&lt;OUTIL&gt;_MAX_COST</code> arrête l'agent avant le plafond. Le résumé affiche toujours tokens et coût, <strong>même sur un run en échec</strong> : une dépense qu'on ne voit pas est une dépense qu'on ne budgète pas.</div></div>
+          <div class="row"><div class="k">Du jugement</div><div class="v">Trancher entre deux corrections possibles, ou comprendre qu'un contournement était volontaire. tfforge resserre une politique IAM sans casser ce qui en dépend ; ansforge voit la différence entre un <code class="inline">become</code> global assumé et un oubli. Une regex ne saura jamais faire ça.</div></div>
+          <div class="row"><div class="k">Pas du mécanique</div><div class="v">Si la correction est un simple remplacement de texte, le modèle ne sert à rien — il coûte et il peut se tromper. Chaque outil garde une commande déterministe pour ces cas-là : <code class="inline">ciforge pin</code> va chercher les empreintes via l'API GitHub, sans IA.</div></div>
+          <div class="row"><div class="k">Avec un budget</div><div class="v"><code class="inline">&lt;OUTIL&gt;_MAX_COST</code> arrête l'agent avant qu'il dépasse. Et le résumé affiche les tokens et le coût à chaque fois, <strong>même quand le run a échoué</strong> — sinon tu ne sais pas ce que tu as dépensé.</div></div>
         </div>
       </div>
     </div>
 
-    <div class="note"><b>À dire en entretien :</b> « L'IA propose, le déterministe décide. Ce qui bloque n'appelle jamais de modèle : un contrôle dont le verdict change d'une exécution à l'autre, on apprend à le contourner au lieu de le corriger. »</div>
+    <div class="note"><b>À dire en entretien :</b> « Ce qui bloque chez moi n'appelle jamais de modèle. Un contrôle qui donne un résultat différent d'une fois sur l'autre, l'équipe apprend à le contourner plutôt qu'à le corriger — donc l'IA conseille, et les règles déterministes décident. »</div>
   </section>
 
   <section class="domain" id="rapport" style="--dot:var(--d-3)">
@@ -120,29 +120,29 @@
       <h2>Le rapport (mutualisé, donc cohérent)</h2>
       <span class="count">1 paquet</span>
     </div>
-    <p class="domain-sub">Un seul module rend le texte, le JSON et le HTML pour tous les agents. Le partager, c'est s'interdire de diverger.</p>
+    <p class="domain-sub">Un seul module produit le texte, le JSON et le HTML pour tous les agents. Tant qu'il est partagé, ils ne peuvent pas diverger.</p>
 
     <div class="cards">
       <div class="card" style="--dot:var(--d-3)">
         <span class="cmd">Un problème, pas une occurrence</span>
         <div class="rows">
-          <div class="row"><div class="k">Le constat</div><div class="v">Le même défaut à seize endroits, ce sont <strong>seize emplacements d'un seul problème</strong> — pas seize problèmes. La première version imprimait le même paragraphe seize fois : 75 lignes que personne ne lit jusqu'au bout, et un compte brut qui dramatise au lieu de décrire.</div></div>
-          <div class="row"><div class="k">La règle</div><div class="v">Les findings sont groupés : une explication, un correctif, et dessous tous les <code class="inline">fichier:ligne</code> — cliquables dans un terminal, ouvrables dans un éditeur.</div></div>
-          <div class="row"><div class="k">Reproductible</div><div class="v">Le tri est stable : deux exécutions sur un code inchangé produisent des octets identiques. Un rapport qui se réordonne tout seul ne peut pas se comparer entre deux commits.</div></div>
+          <div class="row"><div class="k">Le constat</div><div class="v">Ma première version imprimait un bloc par finding. Sur un dépôt réel, ça donnait le même paragraphe seize fois et un rapport de 75 lignes que je ne lisais pas moi-même jusqu'au bout. Seize occurrences du même défaut, c'est un problème, pas seize.</div></div>
+          <div class="row"><div class="k">La règle</div><div class="v">Maintenant c'est groupé : l'explication et le correctif une fois, et dessous la liste des <code class="inline">fichier:ligne</code>. Dans la plupart des terminaux tu cliques dessus et ton éditeur s'ouvre à la bonne ligne.</div></div>
+          <div class="row"><div class="k">Reproductible</div><div class="v">Le tri est stable, donc deux exécutions sur le même code donnent exactement le même fichier. Sinon tu ne peux pas comparer le rapport d'avant et celui d'après.</div></div>
         </div>
       </div>
 
       <div class="card" style="--dot:var(--d-3)">
         <span class="cmd">Le HTML autonome</span>
         <div class="rows">
-          <div class="row"><div class="k">Sans JavaScript</div><div class="v">Les onglets sont des <code class="inline">input[type=radio]</code> cachés et un sélecteur de frère adjacent. Accessible au clavier, fonctionne hors ligne, passe une CSP stricte, s'ouvre dans un client mail.</div></div>
-          <div class="row"><div class="k">Borné</div><div class="v">Chaque onglet plafonne à 50 findings, avec un bandeau qui annonce le total réel. Un dépôt de 5000 findings rend une page rapide plutôt qu'un navigateur figé.</div></div>
-          <div class="row"><div class="k">Honnête</div><div class="v">Le pied de page rappelle que ce sont des heuristiques. Un rapport propre n'est pas une preuve de sécurité, et le dire fait partie du travail.</div></div>
+          <div class="row"><div class="k">Sans JavaScript</div><div class="v">Les onglets, ce sont des <code class="inline">input[type=radio]</code> cachés et un sélecteur CSS. Ça reste navigable au clavier, ça marche hors ligne, ça passe une CSP stricte, et ça s'ouvre même dans un client mail.</div></div>
+          <div class="row"><div class="k">Borné</div><div class="v">50 findings par onglet au maximum, avec un bandeau qui donne le vrai total. Sur un gros dépôt, la page reste rapide au lieu de figer le navigateur.</div></div>
+          <div class="row"><div class="k">Honnête</div><div class="v">Le pied de page rappelle que ce sont des heuristiques. Un rapport vide ne veut pas dire que ton code est sûr, et autant l'écrire noir sur blanc.</div></div>
         </div>
       </div>
     </div>
 
-    <div class="note"><b>À dire en entretien :</b> « Un rapport de 75 lignes ne se lit pas. Je groupe par problème : sur un dépôt réel, 33 findings tous domaines confondus se ramenaient à six problèmes distincts — le compte brut dramatisait au lieu de décrire. »</div>
+    <div class="note"><b>À dire en entretien :</b> « Ma première version sortait 75 lignes et je ne la lisais pas moi-même jusqu'au bout. Maintenant je groupe par problème : sur un vrai dépôt, 33 findings se ramenaient à six problèmes. Le compte brut faisait peur pour rien. »</div>
   </section>
 
   <section class="domain" id="garde" style="--dot:var(--d-2)">
@@ -150,30 +150,30 @@
       <h2>La garde (ce que l'agent ne peut pas faire)</h2>
       <span class="count">policy-as-code</span>
     </div>
-    <p class="domain-sub">Chaque agent porte la même mécanique de garde, appliquée à l'acte destructeur de son domaine. C'est la première question à se poser en ajoutant un outil : dans ce domaine, qu'est-ce qui casse la production ?</p>
+    <p class="domain-sub">Même mécanique de garde partout, mais appliquée à l'action dangereuse du domaine. C'est la première question à se poser quand on ajoute un outil : ici, qu'est-ce qui casse la prod ?</p>
 
     <div class="cards">
       <div class="card" style="--dot:var(--d-2)">
         <span class="cmd">L'acte dangereux change de nom selon le domaine</span>
         <div class="rows">
-          <div class="row"><div class="k">tfforge</div><div class="v"><code class="inline">destroy</code> et <code class="inline">apply</code>. Le nom fait peur, ce qui aide.</div></div>
-          <div class="row"><div class="k">ansforge</div><div class="v"><code class="inline">ansible-playbook</code> sur un inventaire. Il n'existe <strong>pas de verbe destroy</strong> en Ansible : la commande se lit comme une routine et change des machines. C'est précisément pour ça qu'elle a besoin d'une garde explicite.</div></div>
-          <div class="row"><div class="k">ciforge</div><div class="v">Écrire un fichier de workflow. C'est le chemin le plus court vers la production, et rien dans un diff n'a l'air alarmant.</div></div>
+          <div class="row"><div class="k">tfforge</div><div class="v"><code class="inline">destroy</code> et <code class="inline">apply</code>. Le nom fait peur tout seul, c'est déjà ça.</div></div>
+          <div class="row"><div class="k">ansforge</div><div class="v"><code class="inline">ansible-playbook</code> sur un inventaire. En Ansible il n'y a <strong>pas de verbe <code class="inline">destroy</code></strong> : la commande a l'air anodine et pourtant elle modifie des machines. C'est justement pour ça qu'elle mérite la garde la plus stricte.</div></div>
+          <div class="row"><div class="k">ciforge</div><div class="v">Écrire un fichier de workflow. C'est le chemin le plus court vers la prod, et dans un diff ça ne ressemble à rien d'inquiétant.</div></div>
         </div>
       </div>
 
       <div class="card" style="--dot:var(--d-2)">
         <span class="cmd">Les invariants, eux, ne changent pas</span>
         <div class="rows">
-          <div class="row"><div class="k">Échec fermé</div><div class="v">Contexte non classifiable ⇒ l'action n'est <strong>pas</strong> autorisée. On ne devine pas qu'un environnement est sûr.</div></div>
-          <div class="row"><div class="k">Sans terminal, refus</div><div class="v">En CI ou dans un pipe, une confirmation devient un refus. Un agent n'approuve jamais à votre place.</div></div>
-          <div class="row"><div class="k">Politique vide ⇒ défaut</div><div class="v">Un fichier de politique vide retombe sur la politique par défaut, jamais sur « tout autoriser ». Se tromper doit fermer, pas ouvrir.</div></div>
-          <div class="row"><div class="k">Lecture toujours permise</div><div class="v">Une politique mal écrite ne doit jamais empêcher l'agent de simplement <em>regarder</em>.</div></div>
+          <div class="row"><div class="k">Échec fermé</div><div class="v">Si l'outil n'arrive pas à savoir sur quoi il agit, il refuse. On ne suppose pas qu'un environnement est sûr parce qu'on n'a pas réussi à l'identifier.</div></div>
+          <div class="row"><div class="k">Sans terminal, refus</div><div class="v">En CI ou dans un pipe, il n'y a personne pour répondre « oui » : la demande de confirmation devient un refus. L'agent ne s'auto-approuve jamais.</div></div>
+          <div class="row"><div class="k">Politique vide ⇒ défaut</div><div class="v">Un fichier de politique vide retombe sur la politique par défaut, pas sur « tout autoriser ». Une erreur de config ne doit pas ouvrir les vannes.</div></div>
+          <div class="row"><div class="k">Lecture toujours permise</div><div class="v">Les actions en lecture passent toujours. Une politique mal écrite ne doit pas empêcher l'agent de simplement regarder.</div></div>
         </div>
       </div>
     </div>
 
-    <div class="note"><b>À dire en entretien :</b> « En Ansible, l'acte destructeur n'a pas de nom effrayant : <code>ansible-playbook</code> change des machines et se lit comme une commande de routine. C'est celui-là qu'il faut garder, justement parce qu'il n'alarme personne. »</div>
+    <div class="note"><b>À dire en entretien :</b> « En Terraform, <code>destroy</code> prévient par son nom. En Ansible, <code>ansible-playbook</code> modifie des machines et ressemble à une commande de tous les jours — c'est celle-là qui a besoin de la garde la plus stricte. »</div>
   </section>
 
   <section class="domain" id="usage" style="--dot:var(--d-4)">
@@ -181,29 +181,29 @@
       <h2>En pratique</h2>
       <span class="count">le même geste ×3</span>
     </div>
-    <p class="domain-sub">Les mêmes commandes, sur chaque domaine d'un dépôt réel.</p>
+    <p class="domain-sub">À quoi ça ressemble sur un vrai dépôt.</p>
 
     <div class="cards">
       <div class="card" style="--dot:var(--d-4)">
         <span class="cmd">Gratuit, déterministe — tous les jours</span>
         <div class="rows">
           <div class="row"><div class="k">Contrôler</div><div class="v"><code class="inline">tfforge scan ./terraform</code> · <code class="inline">ansforge scan ./ansible</code> · <code class="inline">ciforge scan</code></div></div>
-          <div class="row"><div class="k">Rapporter</div><div class="v">Remplacer <code class="inline">scan</code> par <code class="inline">audit</code> : mêmes règles, mode rapport, et l'option <code class="inline">--html --out</code> produit un livrable à joindre à un ticket.</div></div>
-          <div class="row"><div class="k">Agréger</div><div class="v"><code class="inline">--json</code> sur chacun, et un script en fait un tableau : périmètre, total, sévérités, pire niveau. La forme JSON est un contrat — un outil ajouté demain apparaît dans le tableau sans que le script change.</div></div>
+          <div class="row"><div class="k">Rapporter</div><div class="v">Tu remplaces <code class="inline">scan</code> par <code class="inline">audit</code> : mêmes règles, mais en lecture. Avec <code class="inline">--html --out</code> tu obtiens un fichier à joindre à un ticket.</div></div>
+          <div class="row"><div class="k">Agréger</div><div class="v"><code class="inline">--json</code> sur chacun, et un petit script en fait un tableau : périmètre, total, sévérités, pire niveau. Comme la structure JSON est la même, un outil ajouté plus tard apparaît sans toucher au script.</div></div>
         </div>
       </div>
 
       <div class="card" style="--dot:var(--d-4)">
         <span class="cmd">Payant — quand on corrige</span>
         <div class="rows">
-          <div class="row"><div class="k">Comprendre</div><div class="v"><code class="inline">audit --explain</code> : un appel groupé, une explication et un vrai avant/après par problème, tirés de votre code avec les secrets masqués.</div></div>
-          <div class="row"><div class="k">Corriger</div><div class="v"><code class="inline">fix --diff</code> : l'agent répare, puis les <strong>règles déterministes</strong> revérifient. Le verdict final n'est jamais le récit du modèle.</div></div>
-          <div class="row"><div class="k">Honnêteté</div><div class="v">Si un outil n'a pas pu tourner (binaire absent, quota d'API atteint), le rapport dit que <strong>le contrôle n'a pas eu lieu</strong>. Le silence ne doit jamais se lire comme un succès.</div></div>
+          <div class="row"><div class="k">Comprendre</div><div class="v"><code class="inline">audit --explain</code> : un seul appel, et tu récupères une explication et un avant/après par problème, pris dans ton propre code (secrets masqués).</div></div>
+          <div class="row"><div class="k">Corriger</div><div class="v"><code class="inline">fix --diff</code> : l'agent répare, et le scanner déterministe repasse derrière. Le verdict final vient de lui, pas du modèle.</div></div>
+          <div class="row"><div class="k">Honnêteté</div><div class="v">Si un contrôle n'a pas pu tourner — binaire absent, quota d'API atteint — le rapport le dit explicitement. Sinon tu lis un silence comme un succès.</div></div>
         </div>
       </div>
     </div>
 
-    <div class="note"><b>À dire en entretien :</b> « Le déterministe tourne sur chaque PR et ne coûte rien. Le modèle n'intervient que quand je m'apprête à corriger — et même là, c'est le scanner qui dit si la correction a marché. »</div>
+    <div class="note"><b>À dire en entretien :</b> « La partie déterministe tourne sur chaque PR et ne coûte rien. Je n'appelle le modèle qu'au moment de corriger, et c'est quand même le scanner qui me dit si la correction a marché. »</div>
   </section>
 
   <footer> Le contrat s'applique aujourd'hui à <a class="plain" href="tfforge-guide.html">tfforge</a> (Terraform), <a class="plain" href="ansforge-guide.html">ansforge</a> (Ansible) et <a class="plain" href="ciforge-guide.html">ciforge</a> (GitHub Actions) — et à tout agent qui rejoindra la famille.<br> Le code vit dans leurs dépôts : <a class="plain" href="https://github.com/Mrg77/tfforge">tfforge</a>, <a class="plain" href="https://github.com/Mrg77/ansforge">ansforge</a>, <a class="plain" href="https://github.com/Mrg77/ciforge">ciforge</a> — EN + FR. </footer>
