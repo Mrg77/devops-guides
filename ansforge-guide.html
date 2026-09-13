@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ansible &amp; agent IA — guide des pratiques</title>
+<title>ansforge — guide des fonctionnalités</title>
 <link rel="stylesheet" href="devops-guide.css">
 <style>
   /* accent propre à ansforge : rouge Ansible + le terracotta de la gamme */
@@ -14,14 +14,14 @@
 <div class="wrap">
 
   <header>
-    <div class="brand"><b>⚙️ ansible</b> — guide interne des pratiques</div>
+    <div class="brand"><b>⚙️ ansforge</b> — guide interne des fonctionnalités</div>
     <h1>Un agent IA qui valide de l'Ansible en l'exécutant — parce que le lint ne voit que la forme</h1>
     <p class="lede">Ta fiche de référence : ce que fait chaque partie de l'agent, pourquoi ça compte, et ce que tu peux en dire en entretien. Le pari ici : <strong>un playbook vert au lint peut être faux à l'exécution</strong> — et c'est démontrable.</p>
-    <div class="meta">5 pratiques · éprouvées sur une plateforme AWS réelle · 3 bugs documentés · lecture ~12 min</div>
+    <div class="meta">11 outils · Go, from-scratch sur l'API Anthropic · garde policy-as-code · 3 bugs documentés · lecture ~12 min</div>
   </header>
 
   <div class="pitch">
-    <p><strong>En une phrase :</strong> la méthode pour qu'un <strong>agent IA écrive de l'Ansible sans casser une flotte</strong> — rendre les templates <strong>par Ansible lui-même</strong> (pas par un script Python qui fournit les variables à la main), valide le résultat avec l'outil amont (<code class="inline">nginx -t</code>, <code class="inline">promtool</code>, <code class="inline">logrotate</code>) dans l'image épinglée, puis <strong>lance le conteneur et appelle l'endpoint réel</strong>. <em>Le différenciateur, ce n'est pas « un LLM qui écrit du YAML » — c'est la preuve d'exécution, et le fait que l'agent ne peut pas toucher une machine réelle.</em></p>
+    <p><strong>En une phrase :</strong> ansforge est un <strong>agent IA qui écrit, valide et sécurise de l'Ansible</strong> — il rend les templates <strong>par Ansible lui-même</strong> (pas par un script Python qui fournit les variables à la main), valide le résultat avec l'outil amont (<code class="inline">nginx -t</code>, <code class="inline">promtool</code>, <code class="inline">logrotate</code>) dans l'image épinglée, puis <strong>lance le conteneur et appelle l'endpoint réel</strong>. <em>Le différenciateur, ce n'est pas « un LLM qui écrit du YAML » — c'est la preuve d'exécution, et le fait que l'agent ne peut pas toucher une machine réelle.</em></p>
   </div>
 
   <p class="intro">Trois bugs d'un projet réel sont passés à travers <code class="inline">ansible-lint</code> en profil production. Aucun n'était détectable sans exécuter. C'est ce constat qui définit l'outil : <em>le lint valide la forme, l'exécution valide le comportement.</em></p>
@@ -181,7 +181,7 @@
 
     <div class="cards">
       <div class="card" style="--dot:var(--d-4)">
-        <span class="cmd">L'agent en CI — commentaire de PR, jamais d'échec</span>
+        <span class="cmd">ansforge scan — déterministe, sans clé API</span>
         <div class="rows">
           <div class="row"><div class="k">Ce qui bloque</div><div class="v">Les contrôles déterministes, et eux seuls : <code class="inline">ansible-lint</code>, <code class="inline">--syntax-check</code>, les validateurs amont sur la config rendue. Reproductibles, donc opposables.</div></div>
           <div class="row"><div class="k">Ce qui ne bloque pas</div><div class="v">L'analyse de l'agent : effets de bord, ordre d'exécution, chemin de migration, commentaires devenus faux. Utile à lire, jamais opposable. Un pipeline qui échoue de façon non reproductible détruit la confiance qu'on a en lui.</div></div>
@@ -193,7 +193,7 @@
     <div class="note"><b>À dire en entretien :</b> « L'IA commente, elle ne bloque pas. Un gate de CI doit être déterministe : même diff, même verdict, sinon l'équipe apprend à le contourner. Les linters bloquent, l'agent conseille. »</div>
   </section>
 
-  <footer> Guide interne Ansible · les pratiques appliquées dans la plateforme medscan, aux côtés de <a class="plain" href="tfforge-guide.html">tfforge</a>, <a class="plain" href="ciforge-guide.html">le guide CI/CD</a> et <a class="plain" href="opsforge-guide.html">opsforge</a>.<br> Le détail technique vit dans le <a class="plain" href="https://github.com/Mrg77/POC-TF">dépôt de la plateforme</a>, où les trois bugs cités sont dans l'historique. </footer>
+  <footer> Guide interne ansforge · la brique Ansible du portfolio, aux côtés de <a class="plain" href="tfforge-guide.html">tfforge</a>, <a class="plain" href="ciforge-guide.html">le guide CI/CD</a> et <a class="plain" href="opsforge-guide.html">opsforge</a>.<br> Le détail technique vit dans le <a class="plain" href="https://github.com/Mrg77/ansforge">README du dépôt</a> (EN + FR). </footer>
 
 </div>
 </body>

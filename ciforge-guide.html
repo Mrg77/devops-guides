@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CI/CD GitHub Actions &amp; agent IA — guide des pratiques</title>
+<title>ciforge — guide des fonctionnalités</title>
 <link rel="stylesheet" href="devops-guide.css">
 <style>
   /* accent propre à ciforge : bleu pipeline + le terracotta de la gamme */
@@ -14,14 +14,14 @@
 <div class="wrap">
 
   <header>
-    <div class="brand"><b>🔁 ci/cd</b> — guide interne des pratiques</div>
+    <div class="brand"><b>🔁 ciforge</b> — guide interne des fonctionnalités</div>
     <h1>Un agent IA qui durcit les pipelines GitHub Actions — supply chain, permissions, minutes</h1>
     <p class="lede">Ta fiche de référence : ce que fait chaque partie de l'agent, pourquoi ça compte, et ce que tu peux en dire en entretien. Le pari ici : <strong>le pipeline est le chemin le plus court vers la production</strong> — et le moins audité.</p>
-    <div class="meta">5 pratiques · OIDC first · supply chain · budget de minutes · lecture ~12 min</div>
+    <div class="meta">7 outils · Go, from-scratch sur l'API Anthropic · audit déterministe pour la CI · lecture ~12 min</div>
   </header>
 
   <div class="pitch">
-    <p><strong>En une phrase :</strong> comment <strong>durcir et optimiser des workflows GitHub Actions</strong>, et où un agent IA aide vraiment — épingler les actions tierces au SHA, réduit les <code class="inline">permissions</code> au strict nécessaire, traque les secrets exposés aux forks, et chiffre ce que coûte chaque minute gaspillée. <em>Le différenciateur, ce n'est pas « un LLM qui écrit du YAML » — c'est de traiter la CI comme une surface d'attaque, parce qu'elle en est une.</em></p>
+    <p><strong>En une phrase :</strong> ciforge est un <strong>agent IA qui durcit et optimise des workflows GitHub Actions</strong> — il épingle les actions tierces au SHA, réduit les <code class="inline">permissions</code> au strict nécessaire, traque les secrets exposés aux forks, et chiffre ce que coûte chaque minute gaspillée. <em>Le différenciateur, ce n'est pas « un LLM qui écrit du YAML » — c'est de traiter la CI comme une surface d'attaque, parce qu'elle en est une.</em></p>
   </div>
 
   <p class="intro">Un runner de CI a souvent plus de droits qu'un ingénieur : il déploie, il lit des secrets, il pousse des images. Et il exécute du code tiers sur un simple <code class="inline">uses:</code>. C'est ce déséquilibre que l'outil adresse.</p>
@@ -181,7 +181,7 @@
 
     <div class="cards">
       <div class="card" style="--dot:var(--d-4)">
-        <span class="cmd">La relecture assistée — commentaire inline, sortie toujours nulle</span>
+        <span class="cmd">ciforge audit — déterministe, sans clé API, sort en 1 sur un finding haut</span>
         <div class="rows">
           <div class="row"><div class="k">Ce qu'il apporte</div><div class="v">Ce que les scanners ne voient pas : l'intention du changement, la cohérence entre deux workflows, un effet de bord sur un job voisin, un commentaire devenu faux après une refonte.</div></div>
           <div class="row"><div class="k">Ce qu'il ne fait pas</div><div class="v">Il ne bloque pas, ne fusionne pas, ne pousse pas. Il n'a pas les droits d'écriture sur le dépôt — seulement de commenter. Le privilège suit la tâche.</div></div>
@@ -202,7 +202,7 @@
     <div class="note"><b>À dire en entretien :</b> « L'agent commente la PR, il ne la bloque pas et il n'a pas les droits d'écriture. Sur mon projet, une relecture automatisée a trouvé un bloquant que j'avais manqué — mais c'est moi qui ai décidé du correctif. L'IA propose, le déterministe décide. »</div>
   </section>
 
-  <footer> Guide interne CI/CD · les pratiques appliquées dans la plateforme medscan, aux côtés de <a class="plain" href="tfforge-guide.html">tfforge</a>, <a class="plain" href="ansforge-guide.html">le guide Ansible</a> et <a class="plain" href="opsforge-guide.html">opsforge</a>.<br> Le détail technique vit dans le <a class="plain" href="https://github.com/Mrg77/POC-TF">dépôt de la plateforme</a>, dont la CI applique ces principes. </footer>
+  <footer> Guide interne ciforge · la brique CI/CD du portfolio, aux côtés de <a class="plain" href="tfforge-guide.html">tfforge</a>, <a class="plain" href="ansforge-guide.html">le guide Ansible</a> et <a class="plain" href="opsforge-guide.html">opsforge</a>.<br> Le détail technique vit dans le <a class="plain" href="https://github.com/Mrg77/ciforge">README du dépôt</a> (EN + FR). </footer>
 
 </div>
 </body>
