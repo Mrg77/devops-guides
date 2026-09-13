@@ -30,7 +30,7 @@
     <div class="t" style="--dot:var(--d-2)">
       <div class="ic">⚖️</div>
       <h4>Le déterministe <span class="pill tag">décide</span></h4>
-      <p>Un gate doit rendre le même verdict sur le même diff, aujourd'hui et dans un an. Un modèle ne peut pas le promettre — donc il ne bloque rien.</p>
+      <p>Ce qui bloque doit rendre le même verdict sur la même entrée, aujourd'hui et dans un an. Un modèle ne peut pas le promettre — donc il ne bloque rien.</p>
     </div>
     <div class="t" style="--dot:var(--d-3)">
       <div class="ic">🤖</div>
@@ -64,7 +64,7 @@
         <span class="cmd">Les sous-commandes</span>
         <div class="rows">
           <div class="row"><div class="k"><code class="inline">&lt;outil&gt; "&lt;tâche&gt;"</code></div><div class="v">L'agent, sur une tâche décrite en français ou en anglais. <strong>Coûte des tokens.</strong></div></div>
-          <div class="row"><div class="k"><code class="inline">scan</code></div><div class="v">Contrôle un périmètre et <strong>sort en 1</strong> au seuil demandé. Déterministe, gratuit, sans clé API. C'est la commande qui a sa place dans un pipeline.</div></div>
+          <div class="row"><div class="k"><code class="inline">scan</code></div><div class="v">Contrôle un périmètre et <strong>sort en 1</strong> au seuil demandé. Déterministe, gratuit, sans clé API. C'est la commande à laquelle on peut confier une décision.</div></div>
           <div class="row"><div class="k"><code class="inline">audit</code></div><div class="v">Les <em>mêmes</em> règles, sur tout l'arbre, en mode rapport (sortie 0 par défaut). Pas une autre vérité : une autre intention.</div></div>
           <div class="row"><div class="k"><code class="inline">fix</code></div><div class="v">Corrige, puis <strong>revérifie avec les règles déterministes</strong> — jamais avec le récit que le modèle fait de son propre travail. Coûte des tokens.</div></div>
         </div>
@@ -90,29 +90,29 @@
       <h2>La frontière (ce qui décide, ce qui conseille)</h2>
       <span class="count">la règle</span>
     </div>
-    <p class="domain-sub">C'est le cœur de la méthode, et la question qu'on posera en entretien : pourquoi ne pas avoir un seul point d'entrée intelligent ?</p>
+    <p class="domain-sub">C'est le cœur de la méthode : pourquoi ne pas avoir un seul point d'entrée qui ferait tout ?</p>
 
     <div class="cards">
       <div class="card" style="--dot:var(--d-2)">
-        <span class="cmd">Pourquoi deux moitiés séparées</span>
+        <span class="cmd">Pourquoi deux moitiés, et pas un outil « intelligent »</span>
         <div class="rows">
-          <div class="row"><div class="k">La raison</div><div class="v">Un gate de CI doit rendre <strong>le même verdict sur le même diff</strong>, aujourd'hui et dans six mois. Un modèle ne le garantit pas. Une CI qui échoue de façon imprévisible perd la confiance de l'équipe — et une équipe qui ne fait plus confiance à sa CI la contourne.</div></div>
-          <div class="row"><div class="k">La conséquence</div><div class="v"><code class="inline">scan</code> et <code class="inline">audit</code> n'appellent <strong>aucun modèle</strong> et ne demandent <strong>aucune clé</strong>. On peut les lancer cent fois par jour, sur chaque PR, gratuitement.</div></div>
-          <div class="row"><div class="k">Le corollaire</div><div class="v">Le code de sortie <strong>compte les findings</strong>, il ne cherche jamais une chaîne dans le texte affiché. Le rapport est coloré : un gate ne doit pas dépendre de la façon dont quelque chose s'affiche.</div></div>
+          <div class="row"><div class="k">La raison</div><div class="v">Ce qui <strong>bloque</strong> doit être <strong>reproductible</strong> : même entrée, même verdict, aujourd'hui et dans un an. Un modèle ne le garantit pas — la même question posée deux fois peut donner deux réponses. Un contrôle bloquant dont on ne peut pas prévoir le résultat, on apprend vite à le contourner.</div></div>
+          <div class="row"><div class="k">La conséquence</div><div class="v"><code class="inline">scan</code> et <code class="inline">audit</code> n'appellent aucun modèle et ne demandent aucune clé. On les lance autant qu'on veut, gratuitement, et on peut leur confier une décision.</div></div>
+          <div class="row"><div class="k">Le corollaire</div><div class="v">Le code de sortie <strong>compte les findings</strong>, il ne cherche jamais une chaîne dans le texte affiché. Le rapport est coloré : une décision ne doit pas dépendre de la façon dont quelque chose s'affiche à l'écran.</div></div>
         </div>
       </div>
 
       <div class="card" style="--dot:var(--d-2)">
-        <span class="cmd">Ce que l'agent apporte, lui</span>
+        <span class="cmd">Ce que le modèle apporte, et ce qu'il ne doit pas faire</span>
         <div class="rows">
-          <div class="row"><div class="k">Du jugement</div><div class="v">Réorganiser des permissions par job, migrer vers OIDC avec la bonne condition de confiance, choisir entre deux corrections possibles. Ce qu'une regex ne fera jamais.</div></div>
-          <div class="row"><div class="k">Pas du mécanique</div><div class="v">Substituer 16 tags par leur SHA n'a pas besoin d'un modèle : <code class="inline">ciforge pin</code> le fait gratuitement, via l'API GitHub. Payer un modèle pour du remplacement de chaînes serait un gâchis.</div></div>
+          <div class="row"><div class="k">Du jugement</div><div class="v">Choisir entre deux corrections possibles, comprendre pourquoi un contournement existe, formuler ce qu'une règle a détecté. <em>tfforge</em> réécrit une politique IAM trop large sans casser ce qui en dépend ; <em>ansforge</em> distingue un <code class="inline">become</code> global assumé d'un oubli ; <em>ciforge</em> réorganise des permissions. Une expression régulière ne fait rien de tout ça.</div></div>
+          <div class="row"><div class="k">Pas du mécanique</div><div class="v">Quand la correction est une substitution de chaînes, le modèle est une dépense inutile — et une source d'erreur de plus. Chaque outil garde une commande déterministe pour ces cas : <code class="inline">ciforge pin</code> résout les empreintes via l'API GitHub, <code class="inline">tfforge fix</code> applique ses règles connues. Payer un modèle pour remplacer du texte serait un gâchis.</div></div>
           <div class="row"><div class="k">Avec un budget</div><div class="v"><code class="inline">&lt;OUTIL&gt;_MAX_COST</code> arrête l'agent avant le plafond. Le résumé affiche toujours tokens et coût, <strong>même sur un run en échec</strong> : une dépense qu'on ne voit pas est une dépense qu'on ne budgète pas.</div></div>
         </div>
       </div>
     </div>
 
-    <div class="note"><b>À dire en entretien :</b> « L'IA propose, le déterministe décide. Mes gates n'appellent aucun modèle — un verdict non reproductible dans un pipeline, c'est une équipe qui apprend à le contourner. »</div>
+    <div class="note"><b>À dire en entretien :</b> « L'IA propose, le déterministe décide. Ce qui bloque n'appelle jamais de modèle : un contrôle dont le verdict change d'une exécution à l'autre, on apprend à le contourner au lieu de le corriger. »</div>
   </section>
 
   <section class="domain" id="rapport" style="--dot:var(--d-3)">
@@ -126,7 +126,7 @@
       <div class="card" style="--dot:var(--d-3)">
         <span class="cmd">Un problème, pas une occurrence</span>
         <div class="rows">
-          <div class="row"><div class="k">Le constat</div><div class="v">Seize actions non épinglées, ce sont <strong>seize emplacements d'un seul problème</strong>. La première version imprimait le même paragraphe seize fois : 75 lignes que personne ne lit jusqu'au bout.</div></div>
+          <div class="row"><div class="k">Le constat</div><div class="v">Le même défaut à seize endroits, ce sont <strong>seize emplacements d'un seul problème</strong> — pas seize problèmes. La première version imprimait le même paragraphe seize fois : 75 lignes que personne ne lit jusqu'au bout, et un compte brut qui dramatise au lieu de décrire.</div></div>
           <div class="row"><div class="k">La règle</div><div class="v">Les findings sont groupés : une explication, un correctif, et dessous tous les <code class="inline">fichier:ligne</code> — cliquables dans un terminal, ouvrables dans un éditeur.</div></div>
           <div class="row"><div class="k">Reproductible</div><div class="v">Le tri est stable : deux exécutions sur un code inchangé produisent des octets identiques. Un rapport qui se réordonne tout seul ne peut pas se comparer entre deux commits.</div></div>
         </div>
